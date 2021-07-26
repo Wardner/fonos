@@ -56,20 +56,18 @@ export default function (err, client) {
       e164Number: didInfo.value
     });
 
-    let webhook;
-    //  = ingressInfo.webhook;
+    let webhook = ingressInfo.webhook
+
     try {
       // If this variable exist it then we need overwrite the webhook
       webhook = await channel.getChannelVar({
         channelId: channel.id,
         variable: "WEBHOOK"
       }).value;
-      if(!webhook){
-        webhook = ingressInfo.webhook
-      }
     } catch (e) {
       // Nothing further needs to happen
     }
+    logger.info(webhook)
     logger.verbose(
       `@fonos/dispatcher statis start [channelId = ${channel.id}]`
     );
