@@ -52,24 +52,31 @@ function default_1(err, client) {
         const ingressInfo = await numbers.getIngressInfo({
             e164Number: didInfo.value
         });
-        let newwebhook;
-        let webhook = ingressInfo.webhook;
-        try {
-            // If this variable exist it then we need overwrite the webhook
-            newwebhook = await channel.getChannelVar({
-                channelId: channel.id,
-                variable: "WEBHOOK"
-            });
-            webhook = await channel.getChannelVar({
-                channelId: channel.id,
-                variable: "WEBHOOK"
-            }).value;
-            logger_1.default.info(`EL WEBHOOK en el try con el .value= ${webhook}`);
+        let webhook;
+        //  = ingressInfo.webhook;
+        webhook = await channel.getChannelVar({
+            channelId: channel.id,
+            variable: "WEBHOOK"
+        });
+        logger_1.default.info(`WEBHOOK= ${webhook}`);
+        logger_1.default.info(`WEBHOOK.VALUE ${webhook.value}`);
+        if (!webhook) {
+            logger_1.default.info(`No hay webhook le ponemos el del ingress: ${ingressInfo.webhook}`);
         }
-        catch (e) {
-            // Nothing further needs to happen
-        }
-        logger_1.default.verbose(`EL NEW WEBHOOK funcion= ${newwebhook}`);
+        // try {
+        //   // If this variable exist it then we need overwrite the webhook
+        //   newwebhook = await channel.getChannelVar({
+        //     channelId: channel.id,
+        //     variable: "WEBHOOK"
+        //   });
+        //   webhook = await channel.getChannelVar({
+        //     channelId: channel.id,
+        //     variable: "WEBHOOK"
+        //   }).value;
+        //   logger.info(`EL WEBHOOK en el try con el .value= ${webhook}`)
+        // } catch (e) {
+        //   // Nothing further needs to happen
+        // }
         logger_1.default.verbose(`@fonos/dispatcher statis start [channelId = ${channel.id}]`);
         logger_1.default.verbose(`@fonos/dispatcher statis start [e164Number = ${didInfo.value}]`);
         logger_1.default.verbose(`@fonos/dispatcher statis start [webhook = ${webhook}, accessKeyId = ${ingressInfo.accessKeyId}]`);

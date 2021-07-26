@@ -56,24 +56,32 @@ export default function (err, client) {
       e164Number: didInfo.value
     });
 
-    let newwebhook;
-    let webhook = ingressInfo.webhook;
+    let webhook;
+    //  = ingressInfo.webhook;
+    webhook = await channel.getChannelVar({
+      channelId: channel.id,
+      variable: "WEBHOOK"
+    })
+    logger.info(`WEBHOOK= ${webhook}`)
+    logger.info(`WEBHOOK.VALUE ${webhook.value}`)
 
-    try {
-      // If this variable exist it then we need overwrite the webhook
-      newwebhook = await channel.getChannelVar({
-        channelId: channel.id,
-        variable: "WEBHOOK"
-      });
-      webhook = await channel.getChannelVar({
-        channelId: channel.id,
-        variable: "WEBHOOK"
-      }).value;
-      logger.info(`EL WEBHOOK en el try con el .value= ${webhook}`)
-    } catch (e) {
-      // Nothing further needs to happen
+    if(!webhook){
+      logger.info(`No hay webhook le ponemos el del ingress: ${ingressInfo.webhook}`)
     }
-    logger.verbose(`EL NEW WEBHOOK funcion= ${newwebhook}`)
+    // try {
+    //   // If this variable exist it then we need overwrite the webhook
+    //   newwebhook = await channel.getChannelVar({
+    //     channelId: channel.id,
+    //     variable: "WEBHOOK"
+    //   });
+    //   webhook = await channel.getChannelVar({
+    //     channelId: channel.id,
+    //     variable: "WEBHOOK"
+    //   }).value;
+    //   logger.info(`EL WEBHOOK en el try con el .value= ${webhook}`)
+    // } catch (e) {
+    //   // Nothing further needs to happen
+    // }
     logger.verbose(
       `@fonos/dispatcher statis start [channelId = ${channel.id}]`
     );
