@@ -68,9 +68,11 @@ export default function (err, client) {
       });
       if(newwebhook.value){
         webhook = newwebhook.value
+        console.log("ENTRO AL IF")
       }
     } catch (e) {
       console.log('ERROR CON EL WEBHOOK: ', e)
+      return
       // Nothing further needs to happen
     }
     logger.verbose(`EL NEW WEBHOOK con el .value= ${newwebhook.value}`)
