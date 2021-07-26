@@ -56,8 +56,8 @@ export default function (err, client) {
       e164Number: didInfo.value
     });
 
-    let webhook = ingressInfo.webhook;
     let newwebhook;
+    let webhook = ingressInfo.webhook;
     logger.verbose(`WEBHOOK ANTES DEL TRY: ${webhook}`)
 
     try {
@@ -66,14 +66,13 @@ export default function (err, client) {
         channelId: channel.id,
         variable: "WEBHOOK"
       });
-      if(newwebhook){
+      if(newwebhook.value){
         webhook = newwebhook.value
       }
     } catch (e) {
       console.log('ERROR CON EL WEBHOOK: ', e)
       // Nothing further needs to happen
     }
-    logger.verbose(`EL NEW WEBHOOK= ${newwebhook}`)
     logger.verbose(`EL NEW WEBHOOK con el .value= ${newwebhook.value}`)
     logger.verbose(`WEBHOOK DESPUES DEL TRY CON EL: ${webhook}`)
 
