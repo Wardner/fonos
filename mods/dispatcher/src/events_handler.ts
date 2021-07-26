@@ -57,16 +57,20 @@ export default function (err, client) {
     });
 
     let webhook = ingressInfo.webhook;
+    logger.verbose(`WEBHOOK ANTES DEL TRY: ${webhook}`)
 
     try {
       // If this variable exist it then we need overwrite the webhook
       webhook = await channel.getChannelVar({
         channelId: channel.id,
         variable: "WEBHOOK"
-      });
+      }).value;
     } catch (e) {
+      console.log('ERROR CON EL WEBHOOK: ', e)
       // Nothing further needs to happen
     }
+
+    logger.verbose(`WEBHOOK DESPUES DEL TRY CON EL .VALUE: ${webhook}`)
 
     logger.verbose(
       `@fonos/dispatcher statis start [channelId = ${channel.id}]`
