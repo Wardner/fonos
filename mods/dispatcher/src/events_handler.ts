@@ -56,22 +56,22 @@ export default function (err, client) {
       e164Number: didInfo.value
     });
 
-    let newwebhook;
     let webhook = ingressInfo.webhook;
 
     try {
       // If this variable exist it then we need overwrite the webhook
-      newwebhook = await channel.getChannelVar({
+      const w = await channel.getChannelVar({
         channelId: channel.id,
         variable: "WEBHOOK"
       });
+
+      if(w){
+        webhook = w.value
+      }
+
     } catch (e) {
       console.log('ERROR DEL CATCH: ', e)
       // Nothing further needs to happen
-    }
-    if(newwebhook.value){
-      webhook = newwebhook.value
-      logger.info("DENTRO DEL IF")
     }
 
     logger.verbose(
