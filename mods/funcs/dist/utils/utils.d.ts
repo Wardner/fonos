@@ -1,0 +1,14 @@
+import FuncsPB from "../service/protos/funcs_pb";
+import { DeployFuncRequest, FuncParameters } from "../client/types";
+import { FunctionDefinition } from "openfaas-client";
+export declare const buildDeployFuncRequest: (request: DeployFuncRequest) => FuncsPB.DeployFuncRequest;
+export declare const assertValidFuncName: (name: string) => void;
+export declare const assertValidSchedule: (schedule: string) => void;
+export declare const validateFunc: (pathToFunc: string) => void;
+export declare const cleanupTmpDirSync: (dirName: string) => void;
+export declare const copyFuncAtTmp: (funcPath: string, dirName: string) => Promise<void>;
+export declare const getFuncName: (accessKeyId: string, name: string) => string;
+export declare const getImageName: (accessKeyId: string, name: string) => string;
+export declare const getBuildDir: (accessKeyId: string, funcName: string) => string;
+export declare const buildFaasDeployParameters: (params: FuncParameters) => Promise<FunctionDefinition>;
+export declare const rawFuncToFunc: (rawFunc: any) => FuncsPB.Func;

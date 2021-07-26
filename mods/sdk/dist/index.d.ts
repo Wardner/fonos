@@ -1,0 +1,21 @@
+import CallManager from "@fonos/callmanager";
+import Storage from "@fonos/storage";
+import Secrets from "@fonos/secrets";
+import Providers from "@fonos/providers";
+import Numbers from "@fonos/numbers";
+import Domains from "@fonos/domains";
+import Agents from "@fonos/agents";
+import Funcs from "@fonos/funcs";
+import Auth from "@fonos/auth";
+declare const Fonos: {
+    Secrets: typeof Secrets;
+    Auth: typeof Auth;
+    Agents: typeof Agents;
+    CallManager: typeof CallManager;
+    Domains: typeof Domains;
+    Funcs: typeof Funcs;
+    Storage: typeof Storage;
+    Numbers: typeof Numbers;
+    Providers: typeof Providers;
+};
+export { Fonos as default };

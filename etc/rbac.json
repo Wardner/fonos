@@ -4,6 +4,7 @@
     "description": "Regular access",
     "access": [
       "/fonos.auth.v1alpha1.Auth/GetRole",
+      "/fonos.auth.v1alpha1.Auth/CreateToken",
       "/fonos.storage.v1alpha1.Storage/UploadObject",
       "/fonos.storage.v1alpha1.Storage/GetObjectURL",
       "/fonos.providers.v1alpha1.Providers/ListProviders",
