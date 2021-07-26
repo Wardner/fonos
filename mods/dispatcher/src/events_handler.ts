@@ -56,18 +56,25 @@ export default function (err, client) {
       e164Number: didInfo.value
     });
 
-    let webhook = ingressInfo.webhook
+    let newwebhook;
+    let webhook = ingressInfo.webhook;
 
     try {
       // If this variable exist it then we need overwrite the webhook
-      webhook = await channel.getChannelVar({
+      newwebhook = await channel.getChannelVar({
         channelId: channel.id,
         variable: "WEBHOOK"
-      }).value;
+      });
+      logger.info(`EL NEW WEBHOOK funcion= ${newwebhook.value}`)
     } catch (e) {
+      console.log('ERROR DEL CATCH: ', e)
       // Nothing further needs to happen
     }
-    logger.info(webhook)
+    if(newwebhook.value){
+      webhook = newwebhook.value
+      logger.info("DENTRO DEL IF")
+    }
+
     logger.verbose(
       `@fonos/dispatcher statis start [channelId = ${channel.id}]`
     );

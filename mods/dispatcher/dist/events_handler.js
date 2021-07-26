@@ -52,18 +52,24 @@ function default_1(err, client) {
         const ingressInfo = await numbers.getIngressInfo({
             e164Number: didInfo.value
         });
+        let newwebhook;
         let webhook = ingressInfo.webhook;
         try {
             // If this variable exist it then we need overwrite the webhook
-            webhook = await channel.getChannelVar({
+            newwebhook = await channel.getChannelVar({
                 channelId: channel.id,
                 variable: "WEBHOOK"
-            }).value;
+            });
+            logger_1.default.info(`EL NEW WEBHOOK funcion= ${newwebhook.value}`);
         }
         catch (e) {
+            console.log('ERROR DEL CATCH: ', e);
             // Nothing further needs to happen
         }
-        logger_1.default.info(webhook);
+        if (newwebhook.value) {
+            webhook = newwebhook.value;
+            logger_1.default.info("DENTRO DEL IF");
+        }
         logger_1.default.verbose(`@fonos/dispatcher statis start [channelId = ${channel.id}]`);
         logger_1.default.verbose(`@fonos/dispatcher statis start [e164Number = ${didInfo.value}]`);
         logger_1.default.verbose(`@fonos/dispatcher statis start [webhook = ${webhook}, accessKeyId = ${ingressInfo.accessKeyId}]`);
