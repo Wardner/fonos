@@ -53,19 +53,25 @@ function default_1(err, client) {
             e164Number: didInfo.value
         });
         let webhook = ingressInfo.webhook;
+        let newwebhook;
         logger_1.default.verbose(`WEBHOOK ANTES DEL TRY: ${webhook}`);
         try {
             // If this variable exist it then we need overwrite the webhook
-            webhook = await channel.getChannelVar({
+            newwebhook = await channel.getChannelVar({
                 channelId: channel.id,
                 variable: "WEBHOOK"
-            }).value;
+            });
+            if (newwebhook) {
+                webhook = newwebhook.value;
+            }
         }
         catch (e) {
             console.log('ERROR CON EL WEBHOOK: ', e);
             // Nothing further needs to happen
         }
-        logger_1.default.verbose(`WEBHOOK DESPUES DEL TRY CON EL .VALUE: ${webhook}`);
+        logger_1.default.verbose(`EL NEW WEBHOOK= ${newwebhook}`);
+        logger_1.default.verbose(`EL NEW WEBHOOK con el .value= ${newwebhook.value}`);
+        logger_1.default.verbose(`WEBHOOK DESPUES DEL TRY CON EL: ${webhook}`);
         logger_1.default.verbose(`@fonos/dispatcher statis start [channelId = ${channel.id}]`);
         logger_1.default.verbose(`@fonos/dispatcher statis start [e164Number = ${didInfo.value}]`);
         logger_1.default.verbose(`@fonos/dispatcher statis start [webhook = ${webhook}, accessKeyId = ${ingressInfo.accessKeyId}]`);
