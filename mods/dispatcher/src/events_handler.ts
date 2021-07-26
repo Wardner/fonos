@@ -65,7 +65,6 @@ export default function (err, client) {
         channelId: channel.id,
         variable: "WEBHOOK"
       });
-      logger.info(`EL NEW WEBHOOK funcion= ${newwebhook.value}`)
     } catch (e) {
       console.log('ERROR DEL CATCH: ', e)
       // Nothing further needs to happen

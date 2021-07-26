@@ -60,7 +60,6 @@ function default_1(err, client) {
                 channelId: channel.id,
                 variable: "WEBHOOK"
             });
-            logger_1.default.info(`EL NEW WEBHOOK funcion= ${newwebhook.value}`);
         }
         catch (e) {
             console.log('ERROR DEL CATCH: ', e);
