@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -16,6 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+export interface ISecretsClient {
+  createSecret(request: CreateSecretRequest): Promise<CreateSecretResponse>;
+  getSecret(ref: string): Promise<GetSecretResponse>;
+  listSecrets(request: ListSecretsRequest): Promise<ListSecretsResponse>;
+  deleteSecret(ref: string): void;
+}
 export interface CreateSecretRequest {
   name: string;
   secret: string;
@@ -30,12 +36,12 @@ export interface GetSecretResponse {
   secret: string;
 }
 
-export interface ListSecretRequest {
+export interface ListSecretsRequest {
   pageSize: number;
   pageToken: string;
 }
 
-export interface ListSecretResponse {
+export interface ListSecretsResponse {
   secrets: Secret[];
   nextPageToken: string;
 }

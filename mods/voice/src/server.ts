@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -18,12 +18,14 @@
  */
 import {ServerConfig} from "./types";
 import VoiceResponse from "./voice";
-import logger from "@fonos/logger";
+import logger from "@fonoster/logger";
 import express from "express";
-import {join} from "path";
+import {join, posix} from "path";
+import {Plugin} from "@fonoster/common";
 import fs from "fs";
-import {Plugin} from "@fonos/common";
+import os from "os";
 import PubSub from "pubsub-js";
+import {VoiceTracer} from "./tracer";
 const merge = require("deepmerge");
 const app = express();
 app.use(express.json());
@@ -33,12 +35,14 @@ const defaultServerConfig: ServerConfig = {
   base: "/",
   port: 3000,
   bind: "0.0.0.0",
-  pathToFiles: "/tmp"
+  pathToFiles: os.tmpdir(),
+  otlSpanExporters: []
 };
 
 export default class VoiceServer {
   config: ServerConfig;
   plugins: {};
+  voiceTracer: VoiceTracer;
   constructor(config: ServerConfig = defaultServerConfig) {
     this.config = merge(defaultServerConfig, config);
     this.init();
@@ -56,7 +60,7 @@ export default class VoiceServer {
   }
 
   listen(handler: Function, port = this.config.port) {
-    app.get(`${this.config.base}/tts/:file`, (req, res) => {
+    app.get(posix.join(this.config.base, "/tts/:file"), (req, res) => {
       // TODO: Update to use a stream instead of fs.readFile
       fs.readFile(
         join(this.config.pathToFiles, req.params.file),
@@ -73,15 +77,21 @@ export default class VoiceServer {
       );
     });
 
-    app.post(this.config.base, async (req, res) => {
-      const response = new VoiceResponse(req.body);
+    app.get("/ping", (req, res) => {
+      res.send("pong");
+    });
+
+    app.post(posix.join(this.config.base), async (req, res) => {
+      this.voiceTracer = new VoiceTracer(this.config.otlSpanExporters);
+      this.voiceTracer.init();
+      const response = new VoiceResponse(req.body, this.voiceTracer);
       response.plugins = this.plugins;
-      await handler(req.body, response);
+      handler(req.body, response);
       res.end();
     });
 
     logger.info(
-      `starting voice server on @ ${this.config.bind}, port=${this.config.port}`
+      `starting voice server @ ${this.config.bind}, port=${this.config.port}, path=${this.config.base}`
     );
 
     app.listen(port, this.config.bind);
@@ -113,10 +123,11 @@ export default class VoiceServer {
           }
 
           logger.verbose(
-            `@fonos/voice received event [eventName = ${event.type}, sessionId = ${event.sessionId}]`
-          );
-          logger.silly(
-            `@fonos/voice received event [${JSON.stringify(event, null, " ")}]`
+            `@fonoster/voice received event [${JSON.stringify(
+              event,
+              null,
+              " "
+            )}]`
           );
         }
       }).on("error", console.error);

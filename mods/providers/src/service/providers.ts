@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -34,14 +34,15 @@ import {
   ProvidersService,
   IProvidersServer
 } from "./protos/providers_grpc_pb";
-import {Kind, ResourceBuilder} from "@fonos/core";
+import {Kind, ResourceBuilder} from "@fonoster/core";
 import {
   updateResource,
   createResource,
   ResourceServer,
   getAccessKeyId
-} from "@fonos/core";
+} from "@fonoster/core";
 import decoder from "./decoder";
+import {assertIsValidHost} from "./assertions";
 
 class ProvidersServer implements IProvidersServer {
   [name: string]: grpc.UntypedHandleCall;
@@ -63,18 +64,14 @@ class ProvidersServer implements IProvidersServer {
     call: grpc.ServerUnaryCall<CreateProviderRequest, Provider>,
     callback: grpc.sendUnaryData<Provider>
   ) {
-    const provider = call.request.getProvider();
-
     try {
-      const resource = new ResourceBuilder(
-        Kind.GATEWAY,
-        provider.getName(),
-        provider.getRef()
-      )
-        .withCredentials(provider.getUsername(), provider.getSecret())
-        .withHost(provider.getHost())
-        .withTransport(provider.getTransport())
-        .withExpires(provider.getExpires())
+      // The host must be hostname:{port}
+      assertIsValidHost(call.request.getHost());
+      const resource = new ResourceBuilder(Kind.GATEWAY, call.request.getName())
+        .withCredentials(call.request.getUsername(), call.request.getSecret())
+        .withHost(call.request.getHost())
+        .withTransport(call.request.getTransport())
+        .withExpires(call.request.getExpires())
         .withMetadata({accessKeyId: getAccessKeyId(call)})
         .build();
 
@@ -89,22 +86,25 @@ class ProvidersServer implements IProvidersServer {
     call: grpc.ServerUnaryCall<UpdateProviderRequest, Provider>,
     callback: grpc.sendUnaryData<Provider>
   ) {
-    const provider = call.request.getProvider();
-
     try {
+      assertIsValidHost(call.request.getHost());
+      const provider = (await ResourceServer.getResource(
+        Kind.GATEWAY,
+        call
+      )) as any;
+
       const resource = new ResourceBuilder(
         Kind.GATEWAY,
-        provider.getName(),
-        provider.getRef()
+        call.request.getName(),
+        provider.metadata.ref
       )
         .withMetadata({
-          createdOn: provider.getCreateTime(),
-          modifiedOn: provider.getUpdateTime()
+          createdOn: provider.metadata.createdOn
         })
-        .withCredentials(provider.getUsername(), provider.getSecret())
-        .withHost(provider.getHost())
-        .withTransport(provider.getTransport())
-        .withExpires(provider.getExpires())
+        .withCredentials(call.request.getUsername(), call.request.getSecret())
+        .withHost(call.request.getHost())
+        .withTransport(call.request.getTransport())
+        .withExpires(call.request.getExpires())
         .build();
 
       const result = await updateResource({

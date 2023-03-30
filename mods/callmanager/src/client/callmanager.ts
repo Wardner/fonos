@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -16,38 +16,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {FonosService, ServiceOptions} from "@fonos/common";
+import {APIClient, ClientOptions} from "@fonoster/common";
 import {CallManagerClient} from "../service/protos/callmanager_grpc_pb";
 import CallManagerPB from "../service/protos/callmanager_pb";
 import {promisifyAll} from "grpc-promise";
-import {CallRequest, CallResponse} from "./types";
+import {CallRequest, CallResponse, ICallManagerClient} from "./types";
 
 /**
- * @classdesc Use Fonos CallManager, a capability of Fonos Systems Manager,
- * to initiate and monitor automated calls. Fonos CallManager requires of a
- * running Fonos deployment.
+ * @classdesc Use Fonoster CallManager, a capability of Fonoster CallManager,
+ * to initiate and monitor automated calls. Fonoster CallManager requires of a
+ * running Fonoster deployment.
  *
- * @extends FonosService
+ * @extends APIClient
  * @example
  *
- * const Fonos = require("@fonos/sdk")
- * const callManager = new Fonos.CallManager()
+ * const Fonoster = require("@fonoster/sdk")
+ * const callManager = new Fonoster.CallManager()
  *
  * callManager.call({
  *   from: "9102104343",
- *   to: "17853178070"
- *   app: "default"
+ *   to: "17853178070",
+ *   webhook: "https://https://071e-47-132-137-75.ngrok.io/voiceapp",
  * })
  * .then(console.log)        // successful response
  * .catch(console.error)   // an error occurred
  */
-export default class CallManager extends FonosService {
+export default class CallManager
+  extends APIClient
+  implements ICallManagerClient
+{
   /**
    * Constructs a new CallManager Object.
    *
-   * @see module:core:FonosService
+   * @see module:core:APIClient
    */
-  constructor(options?: ServiceOptions) {
+  constructor(options?: ClientOptions) {
     super(CallManagerClient, options);
     super.init();
     promisifyAll(super.getService(), {metadata: super.getMeta()});
@@ -59,9 +62,10 @@ export default class CallManager extends FonosService {
    * @param {CallRequest} request - Call request options
    * @param {string} request.from - Number you are calling from. You must have this Number configured in your account
    * @param {string} request.to - The callee
-   * @param {string} request.webhook - Url of the application that will handle the call.
+   * @param {string} request.webhook - Url of the application that will handle the call
    * If none is provided it will use the webook setup in the Number
-   * @param {string} request.ignoreE164Validation - If enabled it will accept any input in the from and to
+   * @param {object} request.metadata - Arbitrary payload to send to the Voice Application
+   * @param {boolean} request.ignoreE164Validation - If enabled it will accept any input in the from and to
    * @return {Promise<CallResponse>} - call results
    * @throws if the from number doesn't exist
    * @throws if could not connect to the underline services
@@ -93,7 +97,7 @@ export default class CallManager extends FonosService {
   }
 }
 
-export {CallManagerPB};
+export {CallManagerPB, ICallManagerClient};
 
 // WARNING: Workaround for support to commonjs clients
 module.exports = CallManager;

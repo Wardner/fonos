@@ -1,27 +1,11 @@
-// package: fonos.common.v1beta1
+// package: fonoster.common.v1beta1
 // file: common.proto
 
 /* tslint:disable */
 /* eslint-disable */
 
 import * as jspb from "google-protobuf";
-
-export class Error extends jspb.Message { 
-
-    serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): Error.AsObject;
-    static toObject(includeInstance: boolean, msg: Error): Error.AsObject;
-    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
-    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: Error, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): Error;
-    static deserializeBinaryFromReader(message: Error, reader: jspb.BinaryReader): Error;
-}
-
-export namespace Error {
-    export type AsObject = {
-    }
-}
+import * as protoc_gen_openapiv2_options_annotations_pb from "./protoc-gen-openapiv2/options/annotations_pb";
 
 export class Empty extends jspb.Message { 
 
@@ -37,6 +21,29 @@ export class Empty extends jspb.Message {
 
 export namespace Empty {
     export type AsObject = {
+    }
+}
+
+export class ErrorResponse extends jspb.Message { 
+    getStatus(): number;
+    setStatus(value: number): ErrorResponse;
+    getMessage(): string;
+    setMessage(value: string): ErrorResponse;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ErrorResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: ErrorResponse): ErrorResponse.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: ErrorResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ErrorResponse;
+    static deserializeBinaryFromReader(message: ErrorResponse, reader: jspb.BinaryReader): ErrorResponse;
+}
+
+export namespace ErrorResponse {
+    export type AsObject = {
+        status: number,
+        message: string,
     }
 }
 

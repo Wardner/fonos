@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -16,22 +16,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import PubSub from "pubsub-js";
+import logger from "@fonoster/logger";
 import {objectToQString} from "../utils";
 import {Verb} from "../verb";
 
 export default class HangupVerb extends Verb {
   async run(): Promise<void> {
-    await super.post(
-      `events/user/Hangup`,
-      objectToQString({
-        // WARNING: Harcoded value
-        application: "mediacontroller"
-      }),
-      {
-        variables: {
-          sessionId: this.request.sessionId
-        }
-      }
+    logger.verbose(
+      `@fonoster/voice sending hangup request [sessionId = ${this.request.sessionId}]`
     );
+
+    return new Promise(async (resolve, reject) => {
+      let token: string;
+      try {
+        token = PubSub.subscribe(
+          `SessionClosed.${this.request.sessionId}`,
+          (type, data) => {
+            resolve();
+            PubSub.unsubscribe(token);
+          }
+        );
+
+        await super.post(
+          `events/user/Hangup`,
+          objectToQString({
+            // WARNING: Harcoded value
+            application: "mediacontroller"
+          }),
+          {
+            variables: {
+              sessionId: this.request.sessionId
+            }
+          }
+        );
+      } catch (e) {
+        reject(e);
+        PubSub.unsubscribe(token);
+      }
+    });
   }
 }

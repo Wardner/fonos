@@ -1,10 +1,12 @@
-// package: fonos.agents.v1beta1
+// package: fonoster.agents.v1beta1
 // file: agents.proto
 
 /* tslint:disable */
 /* eslint-disable */
 
 import * as jspb from "google-protobuf";
+import * as protoc_gen_openapiv2_options_annotations_pb from "./protoc-gen-openapiv2/options/annotations_pb";
+import * as google_api_field_behavior_pb from "./google/api/field_behavior_pb";
 import * as common_pb from "./common_pb";
 
 export class ListAgentsRequest extends jspb.Message { 
@@ -59,11 +61,18 @@ export namespace ListAgentsResponse {
 }
 
 export class CreateAgentRequest extends jspb.Message { 
-
-    hasAgent(): boolean;
-    clearAgent(): void;
-    getAgent(): Agent | undefined;
-    setAgent(value?: Agent): CreateAgentRequest;
+    getName(): string;
+    setName(value: string): CreateAgentRequest;
+    getUsername(): string;
+    setUsername(value: string): CreateAgentRequest;
+    getSecret(): string;
+    setSecret(value: string): CreateAgentRequest;
+    clearDomainsList(): void;
+    getDomainsList(): Array<string>;
+    setDomainsList(value: Array<string>): CreateAgentRequest;
+    addDomains(value: string, index?: number): string;
+    getPrivacy(): string;
+    setPrivacy(value: string): CreateAgentRequest;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): CreateAgentRequest.AsObject;
@@ -77,16 +86,27 @@ export class CreateAgentRequest extends jspb.Message {
 
 export namespace CreateAgentRequest {
     export type AsObject = {
-        agent?: Agent.AsObject,
+        name: string,
+        username: string,
+        secret: string,
+        domainsList: Array<string>,
+        privacy: string,
     }
 }
 
 export class UpdateAgentRequest extends jspb.Message { 
-
-    hasAgent(): boolean;
-    clearAgent(): void;
-    getAgent(): Agent | undefined;
-    setAgent(value?: Agent): UpdateAgentRequest;
+    getRef(): string;
+    setRef(value: string): UpdateAgentRequest;
+    getName(): string;
+    setName(value: string): UpdateAgentRequest;
+    getSecret(): string;
+    setSecret(value: string): UpdateAgentRequest;
+    clearDomainsList(): void;
+    getDomainsList(): Array<string>;
+    setDomainsList(value: Array<string>): UpdateAgentRequest;
+    addDomains(value: string, index?: number): string;
+    getPrivacy(): string;
+    setPrivacy(value: string): UpdateAgentRequest;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): UpdateAgentRequest.AsObject;
@@ -100,7 +120,11 @@ export class UpdateAgentRequest extends jspb.Message {
 
 export namespace UpdateAgentRequest {
     export type AsObject = {
-        agent?: Agent.AsObject,
+        ref: string,
+        name: string,
+        secret: string,
+        domainsList: Array<string>,
+        privacy: string,
     }
 }
 

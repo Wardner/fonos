@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import AnswerVerb from "./answer/answer";
 import HangupVerb from "./hangup/hangup";
 import UnmuteVerb from "./unmute/unmute";
 import GatherVerb, {GatherOptions} from "./gather/gather";
@@ -25,13 +26,19 @@ import RecordVerb, {RecordOptions, RecordResult} from "./record/record";
 import {PlaybackControl} from "./playback/playback";
 import {SayOptions} from "./say/types";
 import {VoiceRequest} from "./types";
-import {Plugin} from "@fonos/common";
+import {Plugin} from "@fonoster/common";
 import {assertPluginExist} from "./asserts";
 import PubSub from "pubsub-js";
 import {Verb} from "./verb";
 import {startMediaTransfer, stopMediaTransfer} from "./utils";
 import SGatherVerb, {SGatherOptions} from "./sgather/gather";
 import {SGatherStream} from "./sgather/types";
+import {DtmfOptions} from "./dtmf/types";
+import DtmfVerb from "./dtmf/dtmf";
+import DialVerb from "./dial/dial";
+import {DialOptions} from "./dial/types";
+import StreamStatus from "./dial/status_stream";
+import {VoiceTracer} from "./tracer";
 
 /**
  * @classdesc Use the VoiceResponse object, to construct advance Interactive
@@ -40,27 +47,30 @@ import {SGatherStream} from "./sgather/types";
  * @extends Verb
  * @example
  *
- * import { VoiceServer } from "@fonos/voice";
+ * import { VoiceServer } from "@fonoster/voice";
  *
  * async function handler (request, response) {
+ *   await response.answer();
  *   await response.play("sound:hello-world");
  * }
  *
  * const voiceServer = new VoiceServer({base: '/voiceapp'})
  * voiceServer.listen(handler, { port: 3000 })
  */
-export default class {
+export default class VoiceResponse {
   request: VoiceRequest;
   plugins: {};
+  voiceTracer: VoiceTracer;
 
   /**
    * Constructs a new VoiceResponse object.
    *
    * @param {VoiceRequest} request - Options to indicate the objects endpoint
-   * @see module:core:FonosService
+   * @see module:core:APIClient
    */
-  constructor(request: VoiceRequest) {
+  constructor(request: VoiceRequest, voiceTracer: VoiceTracer) {
     this.request = request;
+    this.voiceTracer = voiceTracer;
     this.plugins = {};
   }
 
@@ -76,7 +86,7 @@ export default class {
   }
 
   /**
-   * Plays an audio in the channel.
+   * Play an audio in the channel.
    *
    * @param {string} media - Sound name or uri with audio file
    * @param {PlayOptions} options - Optional parameters to alter the command's normal
@@ -88,11 +98,14 @@ export default class {
    * @example
    *
    * async function handler (request, response) {
+   *   await response.answer();
    *   await response.play("https://soundsserver:9000/sounds/hello-world.wav");
    * }
    */
   async play(media: string, options: PlayOptions = {}): Promise<void> {
+    const span = this.voiceTracer.createSpan("play");
     await new PlayVerb(this.request).run(media, options);
+    span.end();
   }
 
   /**
@@ -110,6 +123,7 @@ export default class {
    * @example
    *
    * async function handler (request, response) {
+   *   await response.answer();
    *   response.use(new GoogleTTS())
    *   await response.say("Hello workd");   // Plays the sound using GoogleTTS's default values
    * }
@@ -118,9 +132,18 @@ export default class {
     assertPluginExist(this, "tts");
     const tts = this.plugins["tts"];
     // It should return the filename and the generated file location
-    const result = await tts.synthetize(text, options);
+    const main = this.voiceTracer.createSpan("play");
+    const span = this.voiceTracer.createSpan("synthesize");
+    const result = await tts.synthesize(text, options);
+    span.setAttribute("text", text);
+    span.setAttribute("options", JSON.stringify(options));
+    span.end();
     const media = `sound:${this.request.selfEndpoint}/tts/${result.filename}`;
+
     await new PlayVerb(this.request).run(media, options);
+    main.setAttribute("media", media);
+    main.setAttribute("options", JSON.stringify(options));
+    main.end();
   }
 
   /**
@@ -137,32 +160,40 @@ export default class {
    * @example
    *
    * async function handler (request, response) {
-   *   const digits = await response.gather({numDigits: 3});
+   *   await response.answer();
+   *   const digits = await response.gather({source: "dtmf,speech", numDigits: 3});
    *   console.log("digits: " + digits);
    * }
    */
-  async gather(options: {source: "speech,dtmf"}): Promise<string> {
+  async gather(
+    options: GatherOptions = {source: "speech,dtmf"}
+  ): Promise<string> {
     let asr = null;
     if (options.source.includes("speech")) {
       assertPluginExist(this, "asr");
       asr = this.plugins["asr"];
     }
-    return await new GatherVerb(this.request, asr).run(options);
+    const span = this.voiceTracer.createSpan("gather");
+    const result = await new GatherVerb(this.request, asr).run(options);
+    span.setAttribute("options", JSON.stringify(options));
+    span.end();
+    return result;
   }
 
   /**
    * Waits for data entry from the user's keypad or from a stream speech provider. This command is different from `gather`
    * in that it returns a stream of results instead of a single result. You can think of it as active listening.
    *
-   * @param {SGatherOptions} options - Options to select the
+   * @param {SGatherOptions} options - Options object for the SGather verb
    * @param {string} options.source - Where to listen as input source. This option accepts `dtmf` and `speech`. A speech provider must be configure
    * when including the `speech` source. You might inclue both with `dtmf,speech`. Defaults to `speech,dtmf`
-   * @return {SGatherStream} The SGatherStream fires events via am `on` method for `transcription`, `dtmf`, and `error`. And the stream can be close
+   * @return {SGatherStream} The SGatherStream fires events via the `on` method for `transcription`, `dtmf`, and `error`. And the stream can be close
    * with the `close` function.
    * @see StreamSpeechProvider
    * @example
    *
    * async function handler (request, response) {
+   *   await response.answer();
    *   const stream = await response.sgather({source: "dtmf,speech"});
    *
    *   stream.on("transcript", (text, isFinal) => {
@@ -187,6 +218,58 @@ export default class {
   }
 
   /**
+   * Sends dtmf tones to the current session.
+   *
+   * @param {DtmfOptions} options - Options object for the Dtmf verb
+   * @param {string} options.dtmf - A string of the dtmf tones
+   * @example
+   *
+   * async function handler (request, response) {
+   *    await response.answer();
+   *    await response.play("sound:hello-world");
+   *    await response.dtmf({dtmf: "1234"});
+   * }
+   */
+  async dtmf(options: DtmfOptions): Promise<void> {
+    const span = this.voiceTracer.createSpan("dtmf");
+    const result = await new DtmfVerb(this.request).run(options);
+    span.setAttribute("options", JSON.stringify(options));
+    span.end();
+    return result;
+  }
+
+  /**
+   * Forwards the call to an Agent or the PSTN.
+   *
+   * @param {string} destination - Number or Agent to forward the call to
+   * @param {DialOptions} options - Options object for the Dial verb
+   * @param {timeout} options.timeout - Dial timeout
+   * @return {StatusStream} The StatusStream fires events via the `on` method for `progress`, `answer`, `noanswer`, and `busy`. And the stream can be close
+   * with the `close` function.
+   * @example
+   *
+   * async function handler (request, response) {
+   *    await response.answer();
+   *    await response.say("dialing number");
+   *    const stream = await response.dial("17853178070");
+   *    stream.on("progress", console.log)
+   *    stream.on("answer", console.log)
+   *    stream.on("busy", console.log)
+   * }
+   */
+  async dial(
+    destination: string,
+    options?: DialOptions
+  ): Promise<StreamStatus> {
+    const span = this.voiceTracer.createSpan("dial");
+    const result = await new DialVerb(this.request).run(destination, options);
+    span.setAttribute("destination", destination);
+    span.setAttribute("options", JSON.stringify(options));
+    span.end();
+    return result;
+  }
+
+  /**
    * Returns a PlaybackControl control object.
    *
    * @param {string} playbackId - Playback identifier to use in Playback operations
@@ -194,6 +277,7 @@ export default class {
    * @example
    *
    * async function handler (request, response) {
+   *   await response.answer();
    *   response.onDtmfReceived(async(digit) => {
    *      const control = response.playback("1234")
    *      digit === "3"
@@ -207,7 +291,11 @@ export default class {
    * }
    */
   playback(playbackId: string): PlaybackControl {
-    return new PlaybackControl(this.request, playbackId);
+    const span = this.voiceTracer.createSpan("playback");
+    const result = new PlaybackControl(this.request, playbackId);
+    span.setAttribute("playbackId", playbackId);
+    span.end();
+    return result;
   }
 
   /**
@@ -217,6 +305,7 @@ export default class {
    * @example
    *
    * async function handler (request, response) {
+   *   await response.answer();
    *   response.on("DtmfReceived", async(digit) => {
    *      const control = response.playback("1234")
    *      digit === "3"
@@ -244,11 +333,16 @@ export default class {
    * @example
    *
    * async function handler (request, response) {
+   *   await response.answer();
    *   await response.mute();       // Will mute both directions
    * }
    */
   async mute(options?: MuteOptions): Promise<void> {
-    await new MuteVerb(this.request).run(options);
+    const span = this.voiceTracer.createSpan("mute");
+    const result = new MuteVerb(this.request).run(options);
+    span.setAttribute("options", JSON.stringify(options));
+    span.end();
+    await result;
   }
 
   /**
@@ -260,11 +354,34 @@ export default class {
    * @example
    *
    * async function handler (request, response) {
+   *   ...
    *   await response.unmute({direction: "out"});       // Will unmute only the "out" direction
    * }
    */
   async unmute(options?: MuteOptions): Promise<void> {
-    await new UnmuteVerb(this.request).run(options);
+    const span = this.voiceTracer.createSpan("unmute");
+    const result = new UnmuteVerb(this.request).run(options);
+    span.setAttribute("options", JSON.stringify(options));
+    span.end();
+    await result;
+  }
+
+  /**
+   * Answer the communication channel. Before running any other verb you
+   * must run the anwer command.
+   *
+   * @example
+   *
+   * async function handler (request, response) {
+   *   await response.answer();
+   *   ...
+   * }
+   */
+  async answer(): Promise<void> {
+    const span = this.voiceTracer.createSpan("answer");
+    const result = new AnswerVerb(this.request).run();
+    span.end();
+    await result;
   }
 
   /**
@@ -273,11 +390,17 @@ export default class {
    * @example
    *
    * async function handler (request, response) {
+   *   ...
    *   await response.hangup();
    * }
    */
   async hangup(): Promise<void> {
-    await new HangupVerb(this.request).run();
+    const span = this.voiceTracer.createSpan("hangup");
+    const result = new HangupVerb(this.request).run();
+    span.end();
+    // Need to close or the span will be lost
+    this.voiceTracer.close();
+    await result;
   }
 
   /**
@@ -293,23 +416,31 @@ export default class {
    * @example
    *
    * async function handler (request, response) {
+   *   await response.answer();;
    *   const result = await response.record({finishOnKey: "#"});
    *   console.log("recording result: " + JSON.stringify(result))     // recording result: { duration: 30 ...}
    * }
    */
   async record(options: RecordOptions): Promise<RecordResult> {
-    return await new RecordVerb(this.request).run(options);
+    const span = this.voiceTracer.createSpan("record");
+    const result = await new RecordVerb(this.request).run(options);
+    span.end();
+    return result;
   }
 
   // Requests media from Media server
   async openMediaPipe() {
+    const span = this.voiceTracer.createSpan("openMediaPipe");
     const genericVerb = new Verb(this.request);
     await startMediaTransfer(genericVerb, this.request.sessionId);
+    span.end();
   }
 
   // Requests media stop from Media server
   async closeMediaPipe() {
+    const span = this.voiceTracer.createSpan("stopMediaTransfer");
     const genericVerb = new Verb(this.request);
     await stopMediaTransfer(genericVerb, this.request.sessionId);
+    span.end();
   }
 }

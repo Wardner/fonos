@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -16,20 +16,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import CallManager from "@fonos/callmanager";
-import Storage from "@fonos/storage";
-import Secrets from "@fonos/secrets";
-import Providers from "@fonos/providers";
-import Numbers from "@fonos/numbers";
-import Domains from "@fonos/domains";
-import Agents from "@fonos/agents";
-import Funcs from "@fonos/funcs";
-import Auth from "@fonos/auth";
-import {mute} from "@fonos/logger";
+import CallManager from "@fonoster/callmanager";
+import Storage from "@fonoster/storage";
+import Secrets from "@fonoster/secrets";
+import Providers from "@fonoster/providers";
+import Numbers from "@fonoster/numbers";
+import Domains from "@fonoster/domains";
+import Agents from "@fonoster/agents";
+import Funcs from "@fonoster/funcs";
+import Auth from "@fonoster/auth";
+import Projects from "@fonoster/projects";
+import Users from "@fonoster/users";
+import Monitor from "@fonoster/monitor";
+import {mute} from "@fonoster/logger";
 
 mute();
 
-const Fonos = {
+const Fonoster = {
   Secrets,
   Auth,
   Agents,
@@ -38,10 +41,13 @@ const Fonos = {
   Funcs,
   Storage,
   Numbers,
-  Providers
+  Providers,
+  Projects,
+  Users,
+  Monitor,
 };
 
-export {Fonos as default};
+export {Fonoster as default};
 
 // WARNING: Workaround to support commonjs clients
-module.exports = Fonos;
+module.exports = Fonoster;

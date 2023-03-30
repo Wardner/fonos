@@ -1,9 +1,9 @@
 {
-  "name": "@fonos/sdk",
-  "version": "0.1.20-alpha.0",
-  "description": "Fonos SDK module",
+  "name": "@fonoster/sdk",
+  "version": "0.2.40",
+  "description": "Fonoster SDK module",
   "author": "Pedro Sanders <psanders@fonoster.com>",
-  "homepage": "https://github.com/fonoster/fonos#readme",
+  "homepage": "https://github.com/fonoster/fonoster#readme",
   "license": "MIT",
   "main": "dist/index",
   "types": "dist/index",
@@ -23,22 +23,25 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fonoster/fonos.git"
+    "url": "git+https://github.com/fonoster/fonoster.git"
   },
   "bugs": {
-    "url": "https://github.com/fonoster/fonos/issues"
+    "url": "https://github.com/fonoster/fonoster/issues"
   },
   "dependencies": {
-    "@fonos/agents": "^0.1.20-alpha.0",
-    "@fonos/auth": "^0.1.20-alpha.0",
-    "@fonos/callmanager": "^0.1.20-alpha.0",
-    "@fonos/domains": "^0.1.20-alpha.0",
-    "@fonos/funcs": "^0.1.20-alpha.0",
-    "@fonos/logger": "^0.1.20-alpha.0",
-    "@fonos/numbers": "^0.1.20-alpha.0",
-    "@fonos/providers": "^0.1.20-alpha.0",
-    "@fonos/secrets": "^0.1.20-alpha.0",
-    "@fonos/storage": "^0.1.20-alpha.0"
+    "@fonoster/agents": "^0.2.40",
+    "@fonoster/auth": "^0.2.40",
+    "@fonoster/callmanager": "^0.2.40",
+    "@fonoster/domains": "^0.2.40",
+    "@fonoster/funcs": "^0.2.40",
+    "@fonoster/logger": "^0.2.40",
+    "@fonoster/monitor": "^0.2.40",
+    "@fonoster/numbers": "^0.2.40",
+    "@fonoster/projects": "^0.2.40",
+    "@fonoster/providers": "^0.2.40",
+    "@fonoster/secrets": "^0.2.40",
+    "@fonoster/storage": "^0.2.40",
+    "@fonoster/users": "^0.2.40"
   },
   "gitHead": "e7d1d6d4b29f2e0b4b37a55ea4026931a3f76d1b"
 }

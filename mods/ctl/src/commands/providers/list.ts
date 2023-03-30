@@ -1,16 +1,18 @@
 import "../../config";
-import Providers from "@fonos/providers";
 import {CLIError} from "@oclif/errors";
 import {Command, flags as oclifFlags} from "@oclif/command";
-import {CommonPB} from "@fonos/providers";
+import {CommonPB} from "@fonoster/providers";
 import {cli} from "cli-ux";
-import {Provider} from "@fonos/providers/src/types";
+import {Provider} from "@fonoster/providers/src/client/types";
+import {getProjectConfig, hasProjectConfig} from "../../config";
+
+const Providers = require("@fonoster/providers");
 const inquirer = require("inquirer");
 
 export default class ListCommand extends Command {
-  static description = `list registered providers
+  static description = `list all Fonoster Providers you have access to
   ...
-  List the registered providers
+  List all Fonoster Providers you have access to
   `;
   static flags = {
     size: oclifFlags.integer({
@@ -23,9 +25,12 @@ export default class ListCommand extends Command {
   static aliases = ["providers:ls"];
 
   async run() {
+    if (!hasProjectConfig()) {
+      throw new CLIError("you must set a default project");
+    }
     const {flags} = this.parse(ListCommand);
     try {
-      const providers = new Providers();
+      const providers = new Providers(getProjectConfig());
       let firstBatch = true;
       let pageToken = "1";
       const pageSize = flags.size;
@@ -62,8 +67,8 @@ export default class ListCommand extends Command {
                 get: (row) => row.username || "(static)"
               },
               host: {header: "Host", minWidth: 18},
-              transport: {header: "Transport", minWidth: 13},
-              expires: {header: "Expires", minWidth: 13}
+              transport: {header: "Transport", minWidth: 13}
+              //expires: {header: "SIP Registration Refresh", minWidth: 13}
             },
             {"no-header": !showHeader}
           );

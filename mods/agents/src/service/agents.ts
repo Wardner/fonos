@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -32,13 +32,13 @@ import {
   IAgentsService,
   AgentsService
 } from "./protos/agents_grpc_pb";
-import {Kind, ResourceBuilder} from "@fonos/core";
+import {Kind, ResourceBuilder} from "@fonoster/core";
 import {
   updateResource,
   createResource,
   ResourceServer,
   getAccessKeyId
-} from "@fonos/core";
+} from "@fonoster/core";
 import decoder from "./decoder";
 
 class AgentsServer implements IAgentsServer {
@@ -61,11 +61,10 @@ class AgentsServer implements IAgentsServer {
     call: grpc.ServerUnaryCall<CreateAgentRequest, Agent>,
     callback: grpc.sendUnaryData<Agent>
   ) {
-    const agent = call.request.getAgent();
     try {
-      const resource = new ResourceBuilder(Kind.AGENT, agent.getName())
-        .withCredentials(agent.getUsername(), agent.getSecret())
-        .withDomains(agent.getDomainsList())
+      const resource = new ResourceBuilder(Kind.AGENT, call.request.getName())
+        .withCredentials(call.request.getUsername(), call.request.getSecret())
+        .withDomains(call.request.getDomainsList())
         .withMetadata({accessKeyId: getAccessKeyId(call)})
         .build();
 
@@ -81,19 +80,18 @@ class AgentsServer implements IAgentsServer {
     call: grpc.ServerUnaryCall<UpdateAgentRequest, Agent>,
     callback: grpc.sendUnaryData<Agent>
   ) {
-    const agent = call.request.getAgent();
     try {
+      const agent = (await ResourceServer.getResource(Kind.AGENT, call)) as any;
+
       const resource = new ResourceBuilder(
         Kind.AGENT,
-        agent.getName(),
-        agent.getRef()
+        call.request.getName(),
+        call.request.getRef()
       )
-        .withCredentials(agent.getUsername(), agent.getSecret())
-        .withDomains(agent.getDomainsList())
-        .withMetadata({
-          createdOn: agent.getCreateTime(),
-          modifiedOn: agent.getUpdateTime()
-        })
+        .withCredentials(
+          agent.spec.credentials.username,
+          call.request.getSecret()
+        )
         .build();
 
       const result = await updateResource({

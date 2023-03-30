@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -22,7 +22,7 @@ import sinon from "sinon";
 import sinonChai from "sinon-chai";
 import chaiAsPromised from "chai-as-promised";
 import fs, {Stats} from "fs";
-import {FonosService} from "@fonos/common";
+import {APIClient} from "@fonoster/common";
 const expect = chai.expect;
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -31,7 +31,7 @@ import path from "path";
 import fiber from "fibers";
 import * as utils from "../src/client/utils";
 
-describe("@fonos/storage", () => {
+describe("@fonoster/storage", () => {
   const objectUrlReturn = {
     url: "http://api.fonoster.net:9000/recordings/60368b263e9a7d0800000004/test.txt"
   };
@@ -58,9 +58,9 @@ describe("@fonos/storage", () => {
   afterEach(() => sandbox.restore());
 
   it("should reject because is a directory", () => {
-    sandbox.stub(FonosService.prototype, "init").returns();
+    sandbox.stub(APIClient.prototype, "init").returns();
     sandbox.stub(utils, "isDirectory").returns(true);
-    sandbox.stub(FonosService.prototype, "getService").returns({
+    sandbox.stub(APIClient.prototype, "getService").returns({
       uploadObject: () => {
         return uploadObjectStubReturn;
       }
@@ -76,7 +76,7 @@ describe("@fonos/storage", () => {
   });
 
   it("should upload a file with apps bucket correctly and return an UploadObjectResponse", async () => {
-    sandbox.stub(FonosService.prototype, "init").returns();
+    sandbox.stub(APIClient.prototype, "init").returns();
     const objectSize = 15;
     const fileNameReturn = "hello-monkeys.tgz";
     sandbox.stub(utils, "isDirectory").returns(false);
@@ -84,7 +84,7 @@ describe("@fonos/storage", () => {
     sandbox
       .stub(fs, "statSync")
       .returns({...Stats.prototype, size: objectSize});
-    sandbox.stub(FonosService.prototype, "getService").returns({
+    sandbox.stub(APIClient.prototype, "getService").returns({
       uploadObject: () => {
         return uploadObjectStubReturn;
       }
@@ -100,7 +100,7 @@ describe("@fonos/storage", () => {
   });
 
   it("should upload a file with recordings bucket correctly and return an UploadObjectResponse", async () => {
-    sandbox.stub(FonosService.prototype, "init").returns();
+    sandbox.stub(APIClient.prototype, "init").returns();
     const objectSize = 15;
     const fileNameReturn = "hello-monkeys.tgz";
     sandbox.stub(utils, "isDirectory").returns(false);
@@ -108,7 +108,7 @@ describe("@fonos/storage", () => {
     sandbox
       .stub(fs, "statSync")
       .returns({...Stats.prototype, size: objectSize});
-    sandbox.stub(FonosService.prototype, "getService").returns({
+    sandbox.stub(APIClient.prototype, "getService").returns({
       uploadObject: () => {
         return uploadObjectStubReturn;
       }
@@ -127,13 +127,13 @@ describe("@fonos/storage", () => {
     const objectSize = 15;
     const fileNameReturn = "hello-monkeys.tgz";
 
-    sandbox.stub(FonosService.prototype, "init").returns();
+    sandbox.stub(APIClient.prototype, "init").returns();
     sandbox.stub(utils, "isDirectory").returns(false);
     sandbox.stub(path, "basename").returns(fileNameReturn);
     sandbox
       .stub(fs, "statSync")
       .returns({...Stats.prototype, size: objectSize});
-    sandbox.stub(FonosService.prototype, "getService").returns({
+    sandbox.stub(APIClient.prototype, "getService").returns({
       uploadObject: () => {
         return uploadObjectStubReturn;
       }
@@ -149,8 +149,8 @@ describe("@fonos/storage", () => {
   });
 
   it("should return an URL with apps bucket from the service", async () => {
-    sandbox.stub(FonosService.prototype, "init").returns();
-    sandbox.stub(FonosService.prototype, "getService").returns({
+    sandbox.stub(APIClient.prototype, "init").returns();
+    sandbox.stub(APIClient.prototype, "getService").returns({
       getObjectURL: (a: any, b: any) => {
         return getUrlObjectStubReturn;
       }
@@ -166,8 +166,8 @@ describe("@fonos/storage", () => {
   });
 
   it("should return an URL with public bucket from the service", async () => {
-    sandbox.stub(FonosService.prototype, "init").returns();
-    sandbox.stub(FonosService.prototype, "getService").returns({
+    sandbox.stub(APIClient.prototype, "init").returns();
+    sandbox.stub(APIClient.prototype, "getService").returns({
       getObjectURL: () => {
         return getUrlObjectStubReturn;
       }
@@ -183,8 +183,8 @@ describe("@fonos/storage", () => {
   });
 
   it("should return an URL with recordings bucket from the service", async () => {
-    sandbox.stub(FonosService.prototype, "init").returns();
-    sandbox.stub(FonosService.prototype, "getService").returns({
+    sandbox.stub(APIClient.prototype, "init").returns();
+    sandbox.stub(APIClient.prototype, "getService").returns({
       getObjectURL: () => {
         return getUrlObjectStubReturn;
       }

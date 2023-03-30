@@ -1,39 +1,30 @@
 /* eslint-disable require-jsdoc */
 import NumbersPB from "./protos/numbers_pb";
-import {
-  ResourceBuilder,
-  Kind,
-  routr,
-  getAccessKeyId,
-  getRedisConnection
-} from "@fonos/core";
+import {ResourceBuilder, Kind, routr, getAccessKeyId} from "@fonoster/core";
 import numberDecoder from "./decoder";
-import {assertHasAorLinkOrIngressInfo, assertIsE164} from "../utils/assertions";
-
-const redis = getRedisConnection();
+import {assertHasAorLinkOrIngressInfo, assertIsE164} from "./assertions";
 
 export default async function createNumber(
-  number: NumbersPB.Number,
+  request: NumbersPB.CreateNumberRequest,
   call: any
 ): Promise<NumbersPB.Number> {
-  assertIsE164(number);
-  assertHasAorLinkOrIngressInfo(number);
+  assertIsE164(request.getE164Number());
+  assertHasAorLinkOrIngressInfo(request);
 
-  let encoder = new ResourceBuilder(Kind.NUMBER, number.getE164Number())
-    .withGatewayRef(number.getProviderRef())
+  let encoder = new ResourceBuilder(Kind.NUMBER, request.getE164Number())
+    .withGatewayRef(request.getProviderRef())
     .withMetadata({accessKeyId: getAccessKeyId(call)});
 
-  if (number.getAorLink()) {
+  if (request.getAorLink()) {
     encoder = encoder.withLocation(
-      `tel:${number.getE164Number()}`,
-      number.getAorLink()
+      `tel:${request.getE164Number()}`,
+      request.getAorLink()
     );
   } else {
-    // TODO: Perhaps I should place this in a ENV
     encoder = encoder
-      .withLocation(`tel:${number.getE164Number()}`, process.env.MS_ENDPOINT)
+      .withLocation(`tel:${request.getE164Number()}`, process.env.MS_ENDPOINT)
       .withMetadata({
-        webhook: number.getIngressInfo().getWebhook(),
+        webhook: request.getIngressInfo().getWebhook().trim(),
         accessKeyId: getAccessKeyId(call)
       });
   }

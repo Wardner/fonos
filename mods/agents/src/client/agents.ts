@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -16,17 +16,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {FonosService, ServiceOptions} from "@fonos/common";
+import {APIClient, ClientOptions} from "@fonoster/common";
 import {AgentsClient} from "../service/protos/agents_grpc_pb";
 import AgentsPB from "../service/protos/agents_pb";
 import CommonPB from "../service/protos/common_pb";
-import logger from "@fonos/logger";
+import logger from "@fonoster/logger";
 import {promisifyAll} from "grpc-promise";
 import {
   CreateAgentRequest,
   CreateAgentResponse,
   DeleteAgentResponse,
   GetAgentResponse,
+  IAgentsClient,
   ListAgentsRequest,
   ListAgentsResponse,
   UpdateAgentRequest,
@@ -34,15 +35,15 @@ import {
 } from "./types";
 
 /**
- * @classdesc Use Fonos Agents, a capability of Fonos SIP Proxy subsystem,
+ * @classdesc Use Fonoster Agents, a capability of Fonoster SIP Proxy subsystem,
  * to create, update, get and delete Agents. Agents requires of a
- * running Fonos deployment.
+ * running Fonoster deployment.
  *
- * @extends FonosService
+ * @extends APIClient
  * @example
  *
- * const Fonos = require("@fonos/sdk")
- * const agents = new Fonos.Agents()
+ * const Fonoster = require("@fonoster/sdk")
+ * const agents = new Fonoster.Agents()
  *
  * const request = {
  *   name: "John Doe",
@@ -56,14 +57,14 @@ import {
  *   console.log(result)             // successful response
  * }).catch(e => console.error(e))   // an error occurred
  */
-export default class Agents extends FonosService {
+export default class Agents extends APIClient implements IAgentsClient {
   /**
    * Constructs a new Agents object.
    *
-   * @param {ServiceOptions} options - Options to indicate the objects endpoint
-   * @see module:core:FonosService
+   * @param {ClientOptions} options - Options to indicate the objects endpoint
+   * @see module:core:APIClient
    */
-  constructor(options?: ServiceOptions) {
+  constructor(options?: ClientOptions) {
     super(AgentsClient, options);
     super.init();
     promisifyAll(super.getService(), {metadata: super.getMeta()});
@@ -76,7 +77,7 @@ export default class Agents extends FonosService {
    * @param {string} request.name - Friendly name for the SIP device
    * @param {string} request.username -Agent's credential username
    * @param {string} request.secret - Agent's credential secret
-   * @param {string} request.privacy - If set to "Private" Fonos removes
+   * @param {string} request.privacy - If set to "Private" Fonoster removes
    * identifiable information for the requests. Defaults to "None"
    * @param {string[]} request.domains - List of domains this Agent has access to
    * @return {Promise<CreateAgentResponse>}
@@ -95,15 +96,12 @@ export default class Agents extends FonosService {
    * }).catch(e => console.error(e))  // an error occurred
    */
   async createAgent(request: CreateAgentRequest): Promise<CreateAgentResponse> {
-    const agent = new AgentsPB.Agent();
-    agent.setName(request.name);
-    agent.setUsername(request.username);
-    agent.setSecret(request.secret);
-    agent.setDomainsList(request.domains);
-    agent.setPrivacy(request.privacy);
-
     const outRequest = new AgentsPB.CreateAgentRequest();
-    outRequest.setAgent(agent);
+    outRequest.setName(request.name);
+    outRequest.setUsername(request.username);
+    outRequest.setSecret(request.secret);
+    outRequest.setDomainsList(request.domains);
+    outRequest.setPrivacy(request.privacy);
 
     const res = await super.getService().createAgent().sendMessage(outRequest);
 
@@ -131,7 +129,7 @@ export default class Agents extends FonosService {
    *
    * agents.getAgent(ref)
    * .then(result => {
-   *   console.log(result)             // returns the GetDomainResponse interface
+   *   console.log(result)             // returns the GetAgentResponse interface
    * }).catch(e => console.error(e))   // an error occurred
    */
   async getAgent(ref: string): Promise<GetAgentResponse> {
@@ -172,19 +170,12 @@ export default class Agents extends FonosService {
    * }).catch(e => console.error(e))  // an error occurred
    */
   async updateAgent(request: UpdateAgentRequest): Promise<UpdateAgentResponse> {
-    const getAgentRequest = new AgentsPB.GetAgentRequest();
-    getAgentRequest.setRef(request.ref);
-    const agent = await super
-      .getService()
-      .getAgent()
-      .sendMessage(getAgentRequest);
-
-    if (request.name) agent.setName(request.name);
-    if (request.secret) agent.setSecret(request.secret);
-    if (request.privacy) agent.setPrivacy(request.privacy);
-
     const req = new AgentsPB.UpdateAgentRequest();
-    req.setAgent(agent);
+    req.setRef(request.ref);
+
+    if (request.name) req.setName(request.name);
+    if (request.secret) req.setSecret(request.secret);
+    if (request.privacy) req.setPrivacy(request.privacy);
 
     const res = await super.getService().updateAgent().sendMessage(req);
 
@@ -194,7 +185,7 @@ export default class Agents extends FonosService {
   }
 
   /**
-   * List registered Agents in Fonos SIP Proxy subsystem.
+   * List registered Agents in Fonoster SIP Proxy subsystem.
    *
    * @param {ListAgentsRequest} request - Optional parameter with size and
    * token for the request
@@ -216,10 +207,6 @@ export default class Agents extends FonosService {
    * }).catch(e => console.error(e))  // an error occurred
    */
   async listAgents(request: ListAgentsRequest): Promise<ListAgentsResponse> {
-    logger.log(
-      "verbose",
-      `@fonos/agents listAgent [request -> ${JSON.stringify(request)}]`
-    );
     const r = new AgentsPB.ListAgentsRequest();
     r.setPageSize(request.pageSize);
     r.setPageToken(request.pageToken);
@@ -264,7 +251,7 @@ export default class Agents extends FonosService {
   }
 }
 
-export {AgentsPB, CommonPB};
+export {AgentsPB, CommonPB, IAgentsClient};
 
 // WARNING: Workaround for support to commonjs clients
 module.exports = Agents;

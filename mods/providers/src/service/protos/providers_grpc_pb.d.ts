@@ -1,11 +1,14 @@
-// package: fonos.providers.v1beta1
+// package: fonoster.providers.v1beta1
 // file: providers.proto
 
 /* tslint:disable */
 /* eslint-disable */
 
 import * as grpc from "@grpc/grpc-js";
+import {handleClientStreamingCall} from "@grpc/grpc-js/build/src/server-call";
 import * as providers_pb from "./providers_pb";
+import * as protoc_gen_openapiv2_options_annotations_pb from "./protoc-gen-openapiv2/options/annotations_pb";
+import * as google_api_field_behavior_pb from "./google/api/field_behavior_pb";
 import * as common_pb from "./common_pb";
 
 interface IProvidersService extends grpc.ServiceDefinition<grpc.UntypedServiceImplementation> {
@@ -17,7 +20,7 @@ interface IProvidersService extends grpc.ServiceDefinition<grpc.UntypedServiceIm
 }
 
 interface IProvidersService_IListProviders extends grpc.MethodDefinition<providers_pb.ListProvidersRequest, providers_pb.ListProvidersResponse> {
-    path: "/fonos.providers.v1beta1.Providers/ListProviders";
+    path: "/fonoster.providers.v1beta1.Providers/ListProviders";
     requestStream: false;
     responseStream: false;
     requestSerialize: grpc.serialize<providers_pb.ListProvidersRequest>;
@@ -26,7 +29,7 @@ interface IProvidersService_IListProviders extends grpc.MethodDefinition<provide
     responseDeserialize: grpc.deserialize<providers_pb.ListProvidersResponse>;
 }
 interface IProvidersService_ICreateProvider extends grpc.MethodDefinition<providers_pb.CreateProviderRequest, providers_pb.Provider> {
-    path: "/fonos.providers.v1beta1.Providers/CreateProvider";
+    path: "/fonoster.providers.v1beta1.Providers/CreateProvider";
     requestStream: false;
     responseStream: false;
     requestSerialize: grpc.serialize<providers_pb.CreateProviderRequest>;
@@ -35,7 +38,7 @@ interface IProvidersService_ICreateProvider extends grpc.MethodDefinition<provid
     responseDeserialize: grpc.deserialize<providers_pb.Provider>;
 }
 interface IProvidersService_IGetProvider extends grpc.MethodDefinition<providers_pb.GetProviderRequest, providers_pb.Provider> {
-    path: "/fonos.providers.v1beta1.Providers/GetProvider";
+    path: "/fonoster.providers.v1beta1.Providers/GetProvider";
     requestStream: false;
     responseStream: false;
     requestSerialize: grpc.serialize<providers_pb.GetProviderRequest>;
@@ -44,7 +47,7 @@ interface IProvidersService_IGetProvider extends grpc.MethodDefinition<providers
     responseDeserialize: grpc.deserialize<providers_pb.Provider>;
 }
 interface IProvidersService_IUpdateProvider extends grpc.MethodDefinition<providers_pb.UpdateProviderRequest, providers_pb.Provider> {
-    path: "/fonos.providers.v1beta1.Providers/UpdateProvider";
+    path: "/fonoster.providers.v1beta1.Providers/UpdateProvider";
     requestStream: false;
     responseStream: false;
     requestSerialize: grpc.serialize<providers_pb.UpdateProviderRequest>;
@@ -53,7 +56,7 @@ interface IProvidersService_IUpdateProvider extends grpc.MethodDefinition<provid
     responseDeserialize: grpc.deserialize<providers_pb.Provider>;
 }
 interface IProvidersService_IDeleteProvider extends grpc.MethodDefinition<providers_pb.DeleteProviderRequest, common_pb.Empty> {
-    path: "/fonos.providers.v1beta1.Providers/DeleteProvider";
+    path: "/fonoster.providers.v1beta1.Providers/DeleteProvider";
     requestStream: false;
     responseStream: false;
     requestSerialize: grpc.serialize<providers_pb.DeleteProviderRequest>;

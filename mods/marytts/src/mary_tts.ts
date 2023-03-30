@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -19,25 +19,26 @@
 import https from "https";
 import fs from "fs";
 import path from "path";
-import {Plugin} from "@fonos/common";
+import os from "os";
+import {Plugin} from "@fonoster/common";
 import {
   TTSPlugin,
   optionsToQueryString,
   computeFilename,
   SynthResult
-} from "@fonos/tts";
+} from "@fonoster/tts";
 import {MaryTTSConfig, MarySynthOptions} from "./types";
-import logger from "@fonos/logger";
+import logger from "@fonoster/logger";
 
 /**
- * @classdesc The default TTS engine in a Fonos deployment.
+ * @classdesc The default TTS engine in a Fonoster deployment.
  *
  * @extends Plugin
  * @example
  *
- * const MaryTTS = require("@fonos/marytts");
+ * const MaryTTS = require("@fonoster/marytts");
  *
- * new MaryTTS().synthetize("Hello world")
+ * new MaryTTS().synthesize("Hello world")
  *  .then((result) => console.log("path: " + result.pathToFile))
  *  .catch(console.err);
  */
@@ -53,7 +54,7 @@ export default class MaryTTS extends Plugin implements TTSPlugin {
   constructor(config: MaryTTSConfig) {
     super("tts", "marytts");
     this.config = config;
-    this.config.path = this.config.path ? this.config.path : "/tmp";
+    this.config.path = this.config.path ? this.config.path : os.tmpdir();
     this.init(this.config);
   }
 
@@ -67,7 +68,7 @@ export default class MaryTTS extends Plugin implements TTSPlugin {
     this.serviceUrl = `${this.config.url}?${q}`;
 
     logger.debug(
-      `@fonos/tts.MaryTTS.constructor [initializing with config: ${JSON.stringify(
+      `@fonoster/tts.MaryTTS.constructor [initializing with config: ${JSON.stringify(
         config
       )}]`
     );
@@ -82,7 +83,7 @@ export default class MaryTTS extends Plugin implements TTSPlugin {
    * For more information check the following link: http://marytts.phonetik.uni-muenchen.de:59125/documentation.html
    * WARNING: On windows the command "which" that sox library uses is not the same. In windows is "where" instead
    */
-  async synthetize(
+  async synthesize(
     text: string,
     options: MarySynthOptions = {locale: "EN_US"}
   ): Promise<SynthResult> {
@@ -90,7 +91,7 @@ export default class MaryTTS extends Plugin implements TTSPlugin {
     const pathToFile = path.join(this.config.path, filename);
 
     logger.verbose(
-      `@fonos/tts.MaryTTS.synthesize [text: ${text}, options: ${JSON.stringify(
+      `@fonoster/tts.MaryTTS.synthesize [text: ${text}, options: ${JSON.stringify(
         options
       )}]`
     );
@@ -106,9 +107,9 @@ export default class MaryTTS extends Plugin implements TTSPlugin {
       }
 
       logger.silly(
-        `@fonos/tts.MaryTTS.synthesize [headers: ${JSON.stringify(headers)}]`
+        `@fonoster/tts.MaryTTS.synthesize [headers: ${JSON.stringify(headers)}]`
       );
-      logger.verbose(`@fonos/tts.MaryTTS.synthesize [query: ${query}]`);
+      logger.verbose(`@fonoster/tts.MaryTTS.synthesize [query: ${query}]`);
 
       https.get(
         `${this.serviceUrl}&INPUT_TEXT=${encodeURI(text)}&${query}`,

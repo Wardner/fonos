@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -16,6 +16,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+export interface IAgentsClient {
+  createAgent(request: CreateAgentRequest): Promise<CreateAgentResponse>;
+  getAgent(ref: string): Promise<GetAgentResponse>;
+  updateAgent(request: UpdateAgentRequest): Promise<UpdateAgentResponse>;
+  listAgents(request: ListAgentsRequest): Promise<ListAgentsResponse>;
+  deleteAgent(ref: string): Promise<DeleteAgentResponse>;
+}
 
 export interface Agent {
   ref: string;

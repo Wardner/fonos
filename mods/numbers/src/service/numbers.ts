@@ -3,7 +3,7 @@
 import grpc from "@grpc/grpc-js";
 import createNumber from "./create_number";
 import updateNumber from "./update_number";
-import {routr} from "@fonos/core";
+import {routr} from "@fonoster/core";
 import {
   ListNumbersRequest,
   ListNumbersResponse,
@@ -20,9 +20,9 @@ import {
   NumbersService,
   INumbersServer
 } from "./protos/numbers_grpc_pb";
-import {Kind, ResourceServer} from "@fonos/core";
+import {Kind, ResourceServer} from "@fonoster/core";
 import decoder from "./decoder";
-import {ErrorCodes, FonosError} from "@fonos/errors";
+import {ErrorCodes, FonosterError} from "@fonoster/errors";
 
 class NumbersServer extends ResourceServer implements INumbersServer {
   [name: string]: grpc.UntypedHandleCall;
@@ -45,7 +45,7 @@ class NumbersServer extends ResourceServer implements INumbersServer {
     callback: grpc.sendUnaryData<NumberPB.Number>
   ) {
     try {
-      callback(null, await createNumber(call.request.getNumber(), call));
+      callback(null, await createNumber(call.request, call));
     } catch (e) {
       callback(e, null);
     }
@@ -66,7 +66,7 @@ class NumbersServer extends ResourceServer implements INumbersServer {
       await routr.connect();
       const result = await routr.getNumber(call.request.getE164Number());
       if (!result) {
-        throw new FonosError("Number not found", ErrorCodes.NOT_FOUND);
+        throw new FonosterError("Number not found", ErrorCodes.NOT_FOUND);
       }
       const number = decoder(result);
       callback(null, number.getIngressInfo());

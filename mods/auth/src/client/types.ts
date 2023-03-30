@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -16,10 +16,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+export interface IAuthClient {
+  createToken(request: CreateTokenRequest): Promise<CreateTokenResponse>;
+  createNoAccessToken(
+    request: CreateTokenRequest
+  ): Promise<CreateTokenResponse>;
+  validateToken(request: ValidateTokenRequest): Promise<boolean>;
+}
+
 export interface CreateTokenRequest {
   accessKeyId: string;
   roleName?: string;
-  expiration?: "1s" | "1m" | "1d" | "30d" | "1y";
+  // Examples: 40s, 10m, 1d, 30d, 1y
+  expiration?: string;
 }
 
 export interface CreateTokenResponse {

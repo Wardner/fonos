@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -16,39 +16,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {FonosService, ServiceOptions} from "@fonos/common";
+import {APIClient, ClientOptions} from "@fonoster/common";
 import {AuthClient} from "../service/protos/auth_grpc_pb";
 import AuthPB from "../service/protos/auth_pb";
 import {promisifyAll} from "grpc-promise";
 import {
   CreateTokenRequest,
   CreateTokenResponse,
+  IAuthClient,
   ValidateTokenRequest
 } from "./types";
 
 /**
- * @classdesc Use Fonos Auth, a capability of Fonos,
+ * @classdesc Use Fonoster Auth, a capability of Fonoster,
  * to validate and create short life tokens.
  *
- * @extends FonosService
+ * @extends APIClient
  * @example
  *
  * const request = {
  *   accessKeyId: "603693c0afaa1a080000000e",
- *   roleName: "ROLE",
+ *   roleName: "ROLE"
  * };
  *
  * auth.createToken(request)
  * .then(console.log)       // returns an object with the token
  * .catch(console.error);   // an error occurred
  */
-export default class Auths extends FonosService {
+export default class Auths extends APIClient implements IAuthClient {
   /**
    * Constructs a new Auth object.
-   * @param {ServiceOptions} options - Options to indicate the objects endpoint
-   * @see module:core:FonosService
+   * @param {ClientOptions} options - Options to indicate the objects endpoint
+   * @see module:core:APIClient
    */
-  constructor(options?: ServiceOptions) {
+  constructor(options?: ClientOptions) {
     super(AuthClient, options);
     super.init();
     promisifyAll(super.getService(), {metadata: super.getMeta()});
@@ -60,16 +61,18 @@ export default class Auths extends FonosService {
    *
    * @param {CreateTokenRequest} request - Request to create a new token
    * @param {string} request.accessKeyId - Path to the function
-   * @param {string} request.roleName - Unique function name
+   * @param {string} request.expiration - Longevity of the token
+   * @param {string} request.roleName - Role assigned to the token
    * @return {Promise<CreateTokenResponse>}
    * @example
    *
-   * const Fonos = require("@fonos/sdk");
-   * const auth = new Fonos.Auth();
+   * const Fonoster = require("@fonoster/sdk");
+   * const auth = new Fonoster.Auth();
    *
    * const request = {
    *   accessKeyId: "603693c0afaa1a080000000e",
-   *   roleName: "ROLE",
+   *   roleName: "SERVICE",
+   *   expirantion: '10m'
    * };
    *
    * auth.createToken(request)
@@ -78,8 +81,10 @@ export default class Auths extends FonosService {
    */
   async createToken(request: CreateTokenRequest): Promise<CreateTokenResponse> {
     const req = new AuthPB.CreateTokenRequest();
+
     req.setAccessKeyId(request.accessKeyId);
     req.setRoleName(request.roleName);
+    req.setExpiration(request.expiration);
     const res = await super.getService().createToken().sendMessage(req);
     return {
       token: res.getToken()
@@ -95,8 +100,8 @@ export default class Auths extends FonosService {
    * @return {Promise<CreateTokenResponse>}
    * @example
    *
-   * const Fonos = require("@fonos/sdk");
-   * const auth = new Fonos.Auth();
+   * const Fonoster = require("@fonoster/sdk");
+   * const auth = new Fonoster.Auth();
    *
    * const request = {
    *   accessKeyId: "603693c0afaa1a080000000e",
@@ -125,8 +130,8 @@ export default class Auths extends FonosService {
    * @return {Promise<boolean>}
    * @example
    *
-   * const Fonos = require("@fonos/sdk");
-   * const auth = new Fonos.Auth();
+   * const Fonoster = require("@fonoster/sdk");
+   * const auth = new Fonoster.Auth();
    *
    * const request = {
    *   token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -144,7 +149,7 @@ export default class Auths extends FonosService {
   }
 }
 
-export {AuthPB};
+export {AuthPB, IAuthClient};
 
 // WARNING: Workaround for support to commonjs clients
 module.exports = Auths;

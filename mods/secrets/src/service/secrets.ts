@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -22,16 +22,15 @@ import createSecret from "./create_secret";
 import deleteSecret from "./delete_secret";
 import listSecret from "./list_secret";
 import {
-  ListSecretIdRequest,
-  ListSecretIdResponse,
   GetSecretRequest,
   CreateSecretRequest,
   DeleteSecretRequest,
-  CreateSecretResponse,
-  GetSecretResponse
+  ListSecretsIdRequest,
+  ListSecretsIdResponse,
+  Secret,
 } from "./protos/secrets_pb";
 import {Empty} from "./protos/common_pb";
-import {getAccessKeyId} from "@fonos/core";
+import {getAccessKeyId} from "@fonoster/core";
 import {
   ISecretsService,
   SecretsService,
@@ -41,8 +40,8 @@ import {
 class SecretServer implements ISecretsServer {
   [name: string]: grpc.UntypedHandleCall;
   async listSecretsId(
-    call: grpc.ServerUnaryCall<ListSecretIdRequest, ListSecretIdResponse>,
-    callback: grpc.sendUnaryData<ListSecretIdResponse>
+    call: grpc.ServerUnaryCall<ListSecretsIdRequest, ListSecretsIdResponse>,
+    callback: grpc.sendUnaryData<ListSecretsIdResponse>
   ) {
     try {
       const result = await listSecret(
@@ -51,14 +50,14 @@ class SecretServer implements ISecretsServer {
         getAccessKeyId(call)
       );
 
-      const response = new ListSecretIdResponse();
+      const response = new ListSecretsIdResponse();
       response.setSecretsList(result.secrets);
 
       if (result.pageToken) response.setNextPageToken("" + result.pageToken);
       callback(null, response);
     } catch (e) {
-      if (e.response.statusCode == 404) {
-        const response = new ListSecretIdResponse();
+      if (e?.response?.statusCode === 404) {
+        const response = new ListSecretsIdResponse();
         response.setSecretsList([]);
         callback(null, response);
       } else {
@@ -68,8 +67,8 @@ class SecretServer implements ISecretsServer {
   }
 
   async getSecret(
-    call: grpc.ServerUnaryCall<GetSecretRequest, GetSecretResponse>,
-    callback: grpc.sendUnaryData<GetSecretResponse>
+    call: grpc.ServerUnaryCall<GetSecretRequest, Secret>,
+    callback: grpc.sendUnaryData<Secret>
   ) {
     try {
       const name = call.request.getName();
@@ -82,8 +81,8 @@ class SecretServer implements ISecretsServer {
   }
 
   async createSecret(
-    call: grpc.ServerUnaryCall<CreateSecretRequest, CreateSecretResponse>,
-    callback: grpc.sendUnaryData<CreateSecretResponse>
+    call: grpc.ServerUnaryCall<CreateSecretRequest, Secret>,
+    callback: grpc.sendUnaryData<Secret>
   ) {
     try {
       const name = call.request.getName();

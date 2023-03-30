@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -16,15 +16,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {routr} from "@fonos/core";
+import {routr} from "@fonoster/core";
 import grpc from "@grpc/grpc-js";
 import client from "ari-client";
 import {CallRequest, CallResponse} from "./protos/callmanager_pb";
 import {EndpointInfo} from "../client/types";
 import originate from "./call";
 import {ICallManagerServer} from "./protos/callmanager_grpc_pb";
-import logger from "@fonos/logger";
-import {FonosError} from "@fonos/errors";
+import logger from "@fonoster/logger";
+import {FonosterError} from "@fonoster/errors";
 
 const getDomainByNumber = async (e164Number: string) => {
   await routr.connect();
@@ -32,7 +32,7 @@ const getDomainByNumber = async (e164Number: string) => {
 };
 
 const numberNotInList = (number) =>
-  `The number '${number}' is not assigned to one of your domains. Make sure the number exist and is assigned to a Domain`;
+  `the number '${number}' is not assigned to one of your domains. Make sure the number exist and is assigned to a Domain`;
 
 class CallManagerServer implements ICallManagerServer {
   [name: string]: grpc.UntypedHandleCall;
@@ -45,7 +45,10 @@ class CallManagerServer implements ICallManagerServer {
     const domain = await getDomainByNumber(call.request.getFrom());
 
     if (!domain) {
-      callback(new FonosError(numberNotInList(call.request.getFrom())), null);
+      callback(
+        new FonosterError(numberNotInList(call.request.getFrom())),
+        null
+      );
       return;
     }
 
@@ -56,7 +59,10 @@ class CallManagerServer implements ICallManagerServer {
     const accessKeyIdDomain = domain.metadata.accessKeyId;
 
     if (accessKeyIdDomain != accessKeyId) {
-      callback(new FonosError(numberNotInList(call.request.getFrom())), null);
+      callback(
+        new FonosterError(numberNotInList(call.request.getFrom())),
+        null
+      );
     }
 
     logger.verbose(

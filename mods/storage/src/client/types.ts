@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -16,6 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+export interface IStorageClient {
+  uploadObject(request: UploadObjectRequest): Promise<UploadObjectResponse>;
+  getObjectURL(request: GetObjectURLRequest): Promise<GetObjectURLResponse>;
+}
+
 export interface UploadObjectRequest {
   bucket: string;
   filename: string;
@@ -29,7 +34,7 @@ export interface GetObjectURLRequest {
   accessKeyId?: string;
 }
 
-export interface getObjectURLResponse {
+export interface GetObjectURLResponse {
   url: string;
 }
 

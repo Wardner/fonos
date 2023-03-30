@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -26,24 +26,25 @@ import {
   DeleteNumberResponse,
   ListNumbersResponse,
   GetIngressInfoRequest,
-  GetIngressInfoResponse
+  GetIngressInfoResponse,
+  INumbersClient
 } from "./types";
-import {FonosService, ServiceOptions} from "@fonos/common";
+import {APIClient, ClientOptions} from "@fonoster/common";
 import {NumbersClient} from "../service/protos/numbers_grpc_pb";
 import NumbersPB, {IngressInfo} from "../service/protos/numbers_pb";
 import CommonPB from "../service/protos/common_pb";
 import {promisifyAll} from "grpc-promise";
 
 /**
- * @classdesc Use Fonos Numbers, a capability of Fonos SIP Proxy subsystem,
- * to create, update, get and delete numbers. Fonos Numbers requires of a
- * running Fonos deployment.
+ * @classdesc Use Fonoster Numbers, a capability of Fonoster SIP Proxy subsystem,
+ * to create, update, get and delete numbers. Fonoster Numbers requires of a
+ * running Fonoster deployment.
  *
- * @extends FonosService
+ * @extends APIClient
  * @example
  *
- * const Fonos = require("@fonos/sdk");
- * const numbers = new Fonos.Numbers();
+ * const Fonoster = require("@fonoster/sdk");
+ * const numbers = new Fonoster.Numbers();
  *
  * const request = {
  *   providerRef: "516f1577bcf86cd797439012",
@@ -58,13 +59,13 @@ import {promisifyAll} from "grpc-promise";
  *   console.log(result)             // successful response
  * }).catch(e => console.error(e));   // an error occurred
  */
-export default class Numbers extends FonosService {
+export default class Numbers extends APIClient implements INumbersClient {
   /**
    * Constructs a new Numbers object.
-   * @param {ServiceOptions} options - Options to indicate the objects endpoint
-   * @see module:core:FonosService
+   * @param {ClientOptions} options - Options to indicate the objects endpoint
+   * @see module:core:APIClient
    */
-  constructor(options?: ServiceOptions) {
+  constructor(options?: ClientOptions) {
     super(NumbersClient, options);
     super.init();
     promisifyAll(super.getService(), {metadata: super.getMeta()});
@@ -98,18 +99,15 @@ export default class Numbers extends FonosService {
   async createNumber(
     request: CreateNumberRequest
   ): Promise<CreateNumberResponse> {
-    const number = new NumbersPB.Number();
     const ingressInfo = new NumbersPB.IngressInfo();
     ingressInfo.setWebhook(
       request.ingressInfo ? request.ingressInfo.webhook : null
     );
-    number.setProviderRef(request.providerRef);
-    number.setE164Number(request.e164Number);
-    number.setIngressInfo(ingressInfo);
-    number.setAorLink(request.aorLink);
-
     const req = new NumbersPB.CreateNumberRequest();
-    req.setNumber(number);
+    req.setProviderRef(request.providerRef);
+    req.setE164Number(request.e164Number);
+    req.setIngressInfo(ingressInfo);
+    req.setAorLink(request.aorLink);
 
     const res = await super.getService().createNumber().sendMessage(req);
 
@@ -172,12 +170,6 @@ export default class Numbers extends FonosService {
   async updateNumber(
     request: UpdateNumberRequest
   ): Promise<UpdateNumberResponse> {
-    const getRequest = new NumbersPB.GetNumberRequest();
-    getRequest.setRef(request.ref);
-    const numberFromDB = await this.getService()
-      .getNumber()
-      .sendMessage(getRequest);
-
     if (request.aorLink && request.ingressInfo) {
       throw new Error(
         "'ingressApp' and 'aorLink' are not compatible parameters"
@@ -188,19 +180,20 @@ export default class Numbers extends FonosService {
       );
     }
 
+    const req = new NumbersPB.UpdateNumberRequest();
+    req.setRef(request.ref);
+
     if (request.aorLink) {
-      numberFromDB.setAorLink(request.aorLink);
-      numberFromDB.setIngressInfo(undefined);
+      req.setAorLink(request.aorLink);
+      req.setIngressInfo(undefined);
     } else {
-      numberFromDB.setAorLink(undefined);
+      req.setAorLink(undefined);
       const ingressInfo = new IngressInfo();
       ingressInfo.setWebhook(
         request.ingressInfo ? request.ingressInfo.webhook : null
       );
-      numberFromDB.setIngressInfo(ingressInfo);
+      req.setIngressInfo(ingressInfo);
     }
-    const req = new NumbersPB.UpdateNumberRequest();
-    req.setNumber(numberFromDB);
 
     const result = await super.getService().updateNumber().sendMessage(req);
 
@@ -211,7 +204,7 @@ export default class Numbers extends FonosService {
   }
 
   /**
-   * List the Numbers registered in Fonos SIP Proxy subsystem.
+   * List the Numbers registered in Fonoster SIP Proxy subsystem.
    *
    * @param {ListNumbersRequest} request
    * @param {number} request.pageSize - Number of element per page
@@ -286,7 +279,7 @@ export default class Numbers extends FonosService {
    * @param {string} request.e164Number - A number in E164 format for
    * incomming calls
    * @return {Promise<GetIngressAppResponse>}
-   * @throws if the Number is not register in Fonos
+   * @throws if the Number is not register in Fonoster
    * @example
    *
    * const request = {
@@ -313,7 +306,7 @@ export default class Numbers extends FonosService {
   }
 }
 
-export {NumbersPB, CommonPB};
+export {NumbersPB, CommonPB, INumbersClient};
 
 // WARNING: Workaround for support to commonjs clients
 module.exports = Numbers;

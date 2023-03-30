@@ -1,10 +1,12 @@
-// package: fonos.auth.v1beta1
+// package: fonoster.auth.v1beta1
 // file: auth.proto
 
 /* tslint:disable */
 /* eslint-disable */
 
 import * as jspb from "google-protobuf";
+import * as protoc_gen_openapiv2_options_annotations_pb from "./protoc-gen-openapiv2/options/annotations_pb";
+import * as google_api_field_behavior_pb from "./google/api/field_behavior_pb";
 
 export class GetRoleRequest extends jspb.Message { 
     getName(): string;

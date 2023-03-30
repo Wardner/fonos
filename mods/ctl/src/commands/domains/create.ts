@@ -1,25 +1,29 @@
 import "../../config";
-import Domains from "@fonos/domains";
-import Numbers from "@fonos/numbers";
-import {CommonPB} from "@fonos/domains";
+import {CommonPB} from "@fonoster/domains";
 import {CLIError} from "@oclif/errors";
 import {Command} from "@oclif/command";
 import {cli} from "cli-ux";
+import {getProjectConfig, hasProjectConfig} from "../../config";
 
+const Numbers = require("@fonoster/numbers");
+const Domains = require("@fonoster/domains");
 const inquirer = require("inquirer");
 const view: CommonPB.View = CommonPB.View.BASIC;
 
 export default class CreateCommand extends Command {
-  static description = `creates a new domain resource
+  static description = `create a new Fonoster Domain
   ...
-  Creates a new Domain in the SIP Proxy subsystem
+  Create a new Fonoster Domain
   `;
 
   async run() {
-    console.log("This utility will help you create a new Domain");
+    if (!hasProjectConfig()) {
+      throw new CLIError("you must set a default project");
+    }
+    console.log("This utility will help you create a new Fonoster Domain");
     console.log("Press ^C at any time to quit.");
 
-    const numbers = new Numbers();
+    const numbers = new Numbers(getProjectConfig());
     const result = await numbers.listNumbers({
       pageSize: 20,
       pageToken: "1",
@@ -44,7 +48,7 @@ export default class CreateCommand extends Command {
       },
       {
         name: "domainUri",
-        message: "domain uri (e.g acme.com)",
+        message: "domain uri (e.g acme)",
         type: "input"
       },
       {
@@ -91,9 +95,9 @@ export default class CreateCommand extends Command {
           delete answers.egressNumberRef;
         }
 
-        cli.action.start(`Creating domain ${answers.name}`);
+        cli.action.start(`Creating Domain ${answers.name}`);
 
-        const domains = new Domains();
+        const domains = new Domains(getProjectConfig());
         const domain = await domains.createDomain(answers);
         await cli.wait(1000);
 

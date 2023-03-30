@@ -14,7 +14,10 @@
     {"path": "../logger"},
     {"path": "../providers"},
     {"path": "../numbers"},
-    {"path": "../domains"}
+    {"path": "../domains"},
+    {"path": "../projects"},
+    {"path": "../users"},
+    {"path": "../monitor"}
   ],
   "exclude": ["node_modules", "dist", "test"]
 }

@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -16,8 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Storage from "@fonos/storage";
-import {FonosService, ServiceOptions} from "@fonos/common";
+import Storage from "@fonoster/storage";
+import {APIClient, ClientOptions} from "@fonoster/common";
 import {FuncsClient} from "../service/protos/funcs_grpc_pb";
 import FuncsPB from "../service/protos/funcs_pb";
 import CommonPB from "../service/protos/common_pb";
@@ -28,6 +28,7 @@ import {
   GetFuncLogsRequest,
   GetFuncRequest,
   GetFuncResponse,
+  IFuncsClient,
   ListFuncsRequest,
   ListFuncsResponse
 } from "./types";
@@ -39,11 +40,11 @@ import {
 import {DeployStream, LogsStream} from "./stream_wrappers";
 
 /**
- * @classdesc Use Fonos Funcs, a capability of FaaS subsystem,
- * to deploy, update, get and delete functions. Fonos Funcs requires of a
- * running Fonos deployment and FaaS.
+ * @classdesc Use Fonoster Funcs, a capability of FaaS subsystem,
+ * to deploy, update, get and delete functions. Fonoster Funcs requires of a
+ * running Fonoster deployment and FaaS.
  *
- * @extends FonosService
+ * @extends APIClient
  * @example
  *
  * const request = {
@@ -58,14 +59,14 @@ import {DeployStream, LogsStream} from "./stream_wrappers";
  *   stream.onError(e => console.error(e))
  * }).catch(e => console.error(e));   // an error occurred
  */
-export default class Funcs extends FonosService {
+export default class Funcs extends APIClient implements IFuncsClient {
   storage: any;
   /**
    * Constructs a new Funcs object.
-   * @param {ServiceOptions} options - Options to indicate the objects endpoint
-   * @see module:core:FonosService
+   * @param {ClientOptions} options - Options to indicate the objects endpoint
+   * @see module:core:APIClient
    */
-  constructor(options?: ServiceOptions) {
+  constructor(options?: ClientOptions) {
     super(FuncsClient, options);
     super.init();
     this.storage = new Storage(super.getOptions());
@@ -85,8 +86,8 @@ export default class Funcs extends FonosService {
    * @return {Promise<DeployStream>}
    * @example
    *
-   * const Fonos = require("@fonos/sdk");
-   * const funcs = new Fonos.Funcs();
+   * const Fonoster = require("@fonoster/sdk");
+   * const funcs = new Fonoster.Funcs();
    *
    * const request = {
    *   name: "function1",
@@ -258,8 +259,8 @@ export default class Funcs extends FonosService {
    * @return {Promise<LogsStream>}
    * @example
    *
-   * const Fonos = require("@fonos/sdk");
-   * const funcs = new Fonos.Funcs();
+   * const Fonoster = require("@fonoster/sdk");
+   * const funcs = new Fonoster.Funcs();
    *
    * const request = {
    *   name: "function1",
@@ -286,7 +287,7 @@ export default class Funcs extends FonosService {
   }
 }
 
-export {FuncsPB, CommonPB, buildDeployFuncRequest};
+export {FuncsPB, CommonPB, buildDeployFuncRequest, IFuncsClient};
 
 // WARNING: Workaround to support commonjs clients
 module.exports = Funcs;

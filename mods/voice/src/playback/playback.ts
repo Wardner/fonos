@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -18,7 +18,7 @@
  */
 import {Verb} from "../verb";
 import {VoiceRequest} from "../types";
-import logger from "@fonos/logger";
+import logger from "@fonoster/logger";
 
 export class PlaybackControl extends Verb {
   playbackId: string;
@@ -29,12 +29,29 @@ export class PlaybackControl extends Verb {
 
   private async operation(name: string) {
     logger.verbose(
-      `@fonos/voice calling [playbacks/${this.playbackId}/control?operation=${name}]`
+      `@fonoster/voice playback control [operation = ${name}, playbackId = ${this.playbackId}]`
     );
-    await super.post(
-      `playbacks/${this.playbackId}/control`,
-      `operation=${name}`
-    );
+
+    try {
+      switch (name) {
+        case "stop":
+          await super.delete(`playbacks/${this.playbackId}`);
+          break;
+        default:
+          await super.post(
+            `playbacks/${this.playbackId}/control`,
+            `operation=${name}`
+          );
+      }
+    } catch (e) {
+      if (!e.response || e.response.status !== 404) {
+        logger.error(e);
+      }
+    }
+  }
+
+  async stop() {
+    await this.operation("stop");
   }
 
   async restart() {

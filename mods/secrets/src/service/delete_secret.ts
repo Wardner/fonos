@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -17,9 +17,10 @@
  * limitations under the License.
  */
 import getUserToken from "./token";
+import Vault from "node-vault";
 
 export default async function (name: string, accessKeyId: string) {
-  const vault = require("node-vault")();
+  const vault = Vault();
   const entityId = await getUserToken(accessKeyId);
   await vault.delete(`secret/data/${entityId}/` + name);
 }

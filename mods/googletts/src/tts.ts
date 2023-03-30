@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -17,24 +17,26 @@
  * limitations under the License.
  */
 import fs from "fs";
+import os from "os";
 import util from "util";
 import path from "path";
 import textToSpeech from "@google-cloud/text-to-speech";
-import {Plugin} from "@fonos/common";
-import {TTSPlugin, computeFilename, SynthResult} from "@fonos/tts";
-import logger from "@fonos/logger";
+import {Plugin} from "@fonoster/common";
+import {TTSPlugin, computeFilename, SynthResult} from "@fonoster/tts";
+import logger from "@fonoster/logger";
 import {GoogleTTSConfig, SynthOptions} from "./types";
+import {isSSML} from "./utils";
 
 const defaultVoice = {languageCode: "en-US", ssmlGender: "NEUTRAL"};
 
 /**
- * @classdesc Optional TTS engine for Fonos.
+ * @classdesc Optional TTS engine for Fonoster.
  *
  * @extends AbstractTTS
  * @example
- * const GoogleTTS = require("@fonos/googletts");
+ * const GoogleTTS = require("@fonoster/googletts");
  *
- * new GoogleTTS().synthetize("Hello world")
+ * new GoogleTTS().synthesize("Hello world")
  *  .then((result) => console.log("path: " + result.pathToFile))
  *  .catch(console.error);
  */
@@ -48,13 +50,21 @@ class GoogleTTS extends Plugin implements TTSPlugin {
   constructor(config: GoogleTTSConfig) {
     super("tts", "googletts");
     this.config = config;
-    this.config.path = config.path ? config.path : "/tmp";
+    this.config.path = config.path ? config.path : os.tmpdir();
+  }
+
+  /**
+   * @inherit
+   * @deprecated
+   */
+  async synthetize(text: string, options: SynthOptions = {}) {
+    return await this.synthesize(text, options)
   }
 
   /**
    * @inherit
    */
-  async synthetize(
+  async synthesize(
     text: string,
     options: SynthOptions = {}
   ): Promise<SynthResult> {
@@ -66,17 +76,18 @@ class GoogleTTS extends Plugin implements TTSPlugin {
     const pathToFile = path.join(this.config.path, filename);
 
     logger.verbose(
-      `@fonos/tts.GoogleTTS.synthesize [text: ${text}, options: ${JSON.stringify(
-        options
-      )}]`
+      `@fonoster/tts.GoogleTTS.synthesize [input: ${text}, isSSML=${isSSML(
+        text
+      )} options: ${JSON.stringify(options)}]`
     );
 
     const merge = require("deepmerge");
     const voice = merge(defaultVoice, options || {});
+    const input = isSSML(text) ? {ssml: text} : {text: text};
 
     const request = {
       voice,
-      input: {text},
+      input,
       audioConfig: {audioEncoding: "LINEAR16"}
     };
 

@@ -1,10 +1,12 @@
-// package: fonos.domains.v1beta1
+// package: fonoster.domains.v1beta1
 // file: domains.proto
 
 /* tslint:disable */
 /* eslint-disable */
 
 import * as jspb from "google-protobuf";
+import * as protoc_gen_openapiv2_options_annotations_pb from "./protoc-gen-openapiv2/options/annotations_pb";
+import * as google_api_field_behavior_pb from "./google/api/field_behavior_pb";
 import * as common_pb from "./common_pb";
 
 export class ListDomainsRequest extends jspb.Message { 
@@ -59,11 +61,22 @@ export namespace ListDomainsResponse {
 }
 
 export class CreateDomainRequest extends jspb.Message { 
-
-    hasDomain(): boolean;
-    clearDomain(): void;
-    getDomain(): Domain | undefined;
-    setDomain(value?: Domain): CreateDomainRequest;
+    getName(): string;
+    setName(value: string): CreateDomainRequest;
+    getDomainUri(): string;
+    setDomainUri(value: string): CreateDomainRequest;
+    getEgressRule(): string;
+    setEgressRule(value: string): CreateDomainRequest;
+    getEgressNumberRef(): string;
+    setEgressNumberRef(value: string): CreateDomainRequest;
+    clearAccessDenyList(): void;
+    getAccessDenyList(): Array<string>;
+    setAccessDenyList(value: Array<string>): CreateDomainRequest;
+    addAccessDeny(value: string, index?: number): string;
+    clearAccessAllowList(): void;
+    getAccessAllowList(): Array<string>;
+    setAccessAllowList(value: Array<string>): CreateDomainRequest;
+    addAccessAllow(value: string, index?: number): string;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): CreateDomainRequest.AsObject;
@@ -77,16 +90,32 @@ export class CreateDomainRequest extends jspb.Message {
 
 export namespace CreateDomainRequest {
     export type AsObject = {
-        domain?: Domain.AsObject,
+        name: string,
+        domainUri: string,
+        egressRule: string,
+        egressNumberRef: string,
+        accessDenyList: Array<string>,
+        accessAllowList: Array<string>,
     }
 }
 
 export class UpdateDomainRequest extends jspb.Message { 
-
-    hasDomain(): boolean;
-    clearDomain(): void;
-    getDomain(): Domain | undefined;
-    setDomain(value?: Domain): UpdateDomainRequest;
+    getRef(): string;
+    setRef(value: string): UpdateDomainRequest;
+    getName(): string;
+    setName(value: string): UpdateDomainRequest;
+    getEgressRule(): string;
+    setEgressRule(value: string): UpdateDomainRequest;
+    getEgressNumberRef(): string;
+    setEgressNumberRef(value: string): UpdateDomainRequest;
+    clearAccessDenyList(): void;
+    getAccessDenyList(): Array<string>;
+    setAccessDenyList(value: Array<string>): UpdateDomainRequest;
+    addAccessDeny(value: string, index?: number): string;
+    clearAccessAllowList(): void;
+    getAccessAllowList(): Array<string>;
+    setAccessAllowList(value: Array<string>): UpdateDomainRequest;
+    addAccessAllow(value: string, index?: number): string;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): UpdateDomainRequest.AsObject;
@@ -100,7 +129,12 @@ export class UpdateDomainRequest extends jspb.Message {
 
 export namespace UpdateDomainRequest {
     export type AsObject = {
-        domain?: Domain.AsObject,
+        ref: string,
+        name: string,
+        egressRule: string,
+        egressNumberRef: string,
+        accessDenyList: Array<string>,
+        accessAllowList: Array<string>,
     }
 }
 

@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -24,38 +24,39 @@ import {
   ListDomainsRequest,
   ListDomainsResponse,
   GetDomainResponse,
-  DeleteDomainResponse
+  DeleteDomainResponse,
+  IDomainsClient
 } from "./types";
-import {FonosService, ServiceOptions} from "@fonos/common";
+import {APIClient, ClientOptions} from "@fonoster/common";
 import {DomainsClient} from "../service/protos/domains_grpc_pb";
 import DomainsPB from "../service/protos/domains_pb";
 import CommonPB from "../service/protos/common_pb";
 import {promisifyAll} from "grpc-promise";
 
 /**
- * @classdesc Use Fonos Domains, a capability of Fonos SIP Proxy Subsystem,
+ * @classdesc Use Fonoster Domains, a capability of Fonoster SIP Proxy Subsystem,
  * to create, update, get and delete Domains. The API requires of a running
- * Fonos deployment.
+ *Fonoster deployment.
  *
- * @extends FonosService
+ * @extends APIClient
  * @example
  *
- * const Fonos = require("@fonos/sdk");
- * const domains = new Fonos.Domains();
+ * const Fonoster = require("@fonoster/sdk");
+ * const domains = new Fonoster.Domains();
  *
  * domains.createDomain({name: "Local Domain", domainUri: "sip.local"...})
  * .then(result => {
  *   console.log(result)             // successful response
  * }).catch(e => console.error(e));   // an error occurred
  */
-export default class Domains extends FonosService {
+export default class Domains extends APIClient implements IDomainsClient {
   /**
    * Constructs a new Domains object.
    *
-   * @param {ServiceOptions} options - Options to indicate the objects endpoint
-   * @see module:core:FonosService
+   * @param {ClientOptions} options - Options to indicate the objects endpoint
+   * @see module:core:APIClient
    */
-  constructor(options?: ServiceOptions) {
+  constructor(options?: ClientOptions) {
     super(DomainsClient, options);
     super.init();
     promisifyAll(super.getService(), {metadata: super.getMeta()});
@@ -96,16 +97,13 @@ export default class Domains extends FonosService {
   async createDomain(
     request: CreateDomainRequest
   ): Promise<CreateDomainResponse> {
-    const domain = new DomainsPB.Domain();
-    domain.setName(request.name);
-    domain.setDomainUri(request.domainUri);
-    domain.setEgressRule(request.egressRule);
-    domain.setEgressNumberRef(request.egressNumberRef);
-    domain.setAccessDenyList(request.accessDeny);
-    domain.setAccessAllowList(request.accessAllow);
-
     const outRequest = new DomainsPB.CreateDomainRequest();
-    outRequest.setDomain(domain);
+    outRequest.setName(request.name);
+    outRequest.setDomainUri(request.domainUri);
+    outRequest.setEgressRule(request.egressRule);
+    outRequest.setEgressNumberRef(request.egressNumberRef);
+    outRequest.setAccessDenyList(request.accessDeny);
+    outRequest.setAccessAllowList(request.accessAllow);
 
     const res = await super.getService().createDomain().sendMessage(outRequest);
 
@@ -189,25 +187,18 @@ export default class Domains extends FonosService {
   async updateDomain(
     request: UpdateDomainRequest
   ): Promise<UpdateDomainResponse> {
-    const getDomainRequest = new DomainsPB.GetDomainRequest();
-    getDomainRequest.setRef(request.ref);
-    const domain = await super
-      .getService()
-      .getDomain()
-      .sendMessage(getDomainRequest);
+    const outRequest = new DomainsPB.UpdateDomainRequest();
+    outRequest.setRef(request.ref);
 
-    if (request.name) domain.setName(request.name);
-    if (request.egressRule) domain.setEgressRule(request.egressRule);
+    if (request.name) outRequest.setName(request.name);
+    if (request.egressRule) outRequest.setEgressRule(request.egressRule);
     if (request.egressNumberRef) {
-      domain.setEgressNumberRef(request.egressNumberRef);
+      outRequest.setEgressNumberRef(request.egressNumberRef);
     }
-    if (request.accessDeny) domain.setAccessDenyList(request.accessDeny);
-    if (request.accessAllow) domain.setAccessAllowList(request.accessAllow);
+    if (request.accessDeny) outRequest.setAccessDenyList(request.accessDeny);
+    if (request.accessAllow) outRequest.setAccessAllowList(request.accessAllow);
 
-    const req = new DomainsPB.UpdateDomainRequest();
-    req.setDomain(domain);
-
-    const res = await super.getService().updateDomain().sendMessage(req);
+    const res = await super.getService().updateDomain().sendMessage(outRequest);
 
     return {
       ref: res.getRef()
@@ -215,7 +206,7 @@ export default class Domains extends FonosService {
   }
 
   /**
-   * List the Domains registered in Fonos SIP Proxy subsystem.
+   * List the Domains registered in Fonoster SIP Proxy subsystem.
    *
    * @param {ListDomainsRequest} request - Optional parameter with size and
    * token for the request
@@ -283,7 +274,7 @@ export default class Domains extends FonosService {
   }
 }
 
-export {DomainsPB, CommonPB};
+export {DomainsPB, CommonPB, IDomainsClient};
 
 // WARNING: Workaround for support to commonjs clients
 module.exports = Domains;

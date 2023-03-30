@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -16,23 +16,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Auth from "@fonos/auth";
-import Storage from "@fonos/storage";
-import logger from "@fonos/logger";
+import Auth from "@fonoster/auth";
+import Storage from "@fonoster/storage";
+import logger from "@fonoster/logger";
 
 export const uploadRecording = async (
   accessKeyId: string,
   filename: string
 ) => {
   logger.verbose(
-    `@fonos/dispatcher creating short-life token [accessKeyId = ${accessKeyId}]`
+    `@fonoster/dispatcher creating short-life token [accessKeyId = ${accessKeyId}]`
   );
   const auth = new Auth();
-  const access = await auth.createToken({accessKeyId});
+  // Creates a PROJECT level token with 10 minutes expiration
+  const access = await auth.createToken({
+    accessKeyId,
+    expiration: "10m",
+    roleName: "PROJECT"
+  });
   const storage = new Storage({accessKeyId, accessKeySecret: access.token});
 
   logger.verbose(
-    `@fonos/dispatcher uploading file to storage subsystem [filename = ${filename}]`
+    `@fonoster/dispatcher uploading file to storage subsystem [filename = ${filename}]`
   );
 
   if (!process.env.RECORDINGS_PATH) {
@@ -40,7 +45,7 @@ export const uploadRecording = async (
   }
 
   await storage.uploadObject({
-    // WARNING: Hardcoded value
+    // TODO: Place bucket name on a constant
     bucket: "recordings",
     filename: `${process.env.RECORDINGS_PATH}/${filename}`
   });

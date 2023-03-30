@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -18,7 +18,7 @@
  */
 import {CallRequest, CallResponse} from "./protos/callmanager_pb";
 import {nanoid} from "nanoid";
-import {FonosError} from "@fonos/errors";
+import {FonosterError} from "@fonoster/errors";
 import phone from "phone";
 import {EndpointInfo} from "../client/types";
 
@@ -30,22 +30,28 @@ export default async function (
   if (
     !request.getIgnoreE164Validation() &&
     phone(request.getFrom()).length === 0
-  )
-    throw new FonosError("invalid e164 number");
-  if (!request.getIgnoreE164Validation() && phone(request.getTo()).length === 0)
-    throw new FonosError("invalid e164 number");
+  ) {
+    throw new FonosterError("invalid e164 number");
+  }
+
+  if (
+    !request.getIgnoreE164Validation() &&
+    phone(request.getTo()).length === 0
+  ) {
+    throw new FonosterError("invalid e164 number");
+  }
 
   const response = new CallResponse();
   response.setRef(nanoid());
 
-  // Removing the "+" sign
-  const from = request.getFrom().replace("+", "");
-  const to = request.getTo().replace("+", "");
-
   const variables = !request.getWebhook()
-    ? {DID_INFO: from, REF: response.getRef(), METADATA: request.getMetadata()}
+    ? {
+        DID_INFO: request.getFrom(),
+        REF: response.getRef(),
+        METADATA: request.getMetadata()
+      }
     : {
-        DID_INFO: from,
+        DID_INFO: request.getFrom(),
         WEBHOOK: request.getWebhook(),
         REF: response.getRef(),
         METADATA: request.getMetadata()
@@ -54,7 +60,9 @@ export default async function (
   await channel.originate({
     context: endpointInfo.context,
     extension: endpointInfo.extension,
-    endpoint: `PJSIP/${endpointInfo.trunk}/sip:${to}@${endpointInfo.domain}`,
+    endpoint: `PJSIP/${endpointInfo.trunk}/sip:${request.getTo()}@${
+      endpointInfo.domain
+    }`,
     variables
   });
 

@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -31,7 +31,7 @@ chai.use(chaiAsPromised);
 chai.should();
 const sandbox = sinon.createSandbox();
 
-describe("@fonos/marytts", () => {
+describe("@fonoster/marytts", () => {
   afterEach(() => sandbox.restore());
   const defConfig = {
     url: "https://localhost:59125"
@@ -47,7 +47,7 @@ describe("@fonos/marytts", () => {
 
     const tts = new MaryTTS(defConfig);
 
-    await expect(tts.synthetize("hello world", {locale: "en_US"}))
+    await expect(tts.synthesize("hello world", {locale: "en_US"}))
       .to.be.eventually.rejected.and.to.be.an.instanceOf(Error)
       .to.have.property("message", "Request failed with status code: 201");
     expect(pipe).to.not.have.been.calledOnce;
@@ -63,7 +63,7 @@ describe("@fonos/marytts", () => {
     const get = sandbox.stub(https, "get").yields({statusCode: 200, pipe});
 
     const tts = new MaryTTS(defConfig);
-    const result = await tts.synthetize("hello world");
+    const result = await tts.synthesize("hello world");
     expect(result).to.have.property("filename").to.not.be.null;
     expect(result).to.have.property("pathToFile").to.not.be.null;
     expect(pipe).to.have.been.calledOnce;

@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -16,20 +16,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {CreateSecretResponse} from "./protos/secrets_pb";
+import {Secret} from "./protos/secrets_pb";
 import getUserToken from "./token";
+import Vault from "node-vault";
 
 export default async function (
   name: string,
   secret: string,
   accessKeyId: string
-): Promise<CreateSecretResponse> {
-  const vault = require("node-vault")();
+): Promise<Secret> {
+  const vault = Vault();
   const entityId = await getUserToken(accessKeyId);
   await vault.write(`secret/data/${entityId}/${name}`, {
     data: {value: secret}
   });
-  const response = new CreateSecretResponse();
+  const response = new Secret();
   response.setName(name);
   return response;
 }

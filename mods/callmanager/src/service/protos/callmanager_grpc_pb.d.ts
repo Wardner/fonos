@@ -1,18 +1,20 @@
-// package: fonos.callmanager.v1beta1
+// package: fonoster.callmanager.v1beta1
 // file: callmanager.proto
 
 /* tslint:disable */
 /* eslint-disable */
 
 import * as grpc from "@grpc/grpc-js";
+import {handleClientStreamingCall} from "@grpc/grpc-js/build/src/server-call";
 import * as callmanager_pb from "./callmanager_pb";
+import * as protoc_gen_openapiv2_options_annotations_pb from "./protoc-gen-openapiv2/options/annotations_pb";
 
 interface ICallManagerService extends grpc.ServiceDefinition<grpc.UntypedServiceImplementation> {
     call: ICallManagerService_ICall;
 }
 
 interface ICallManagerService_ICall extends grpc.MethodDefinition<callmanager_pb.CallRequest, callmanager_pb.CallResponse> {
-    path: "/fonos.callmanager.v1beta1.CallManager/Call";
+    path: "/fonoster.callmanager.v1beta1.CallManager/Call";
     requestStream: false;
     responseStream: false;
     requestSerialize: grpc.serialize<callmanager_pb.CallRequest>;

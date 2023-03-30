@@ -2,7 +2,7 @@
 
 Have you heard about Multipass? Multipass is a Canonical project that offers a lightweight VM manager for Linux, Windows, and macOS. With Multipass, you can deploy Project Fonos in a local environment in a single command. This deployment method is by far the fasted way to get started with PF.
 
-> This method will not automatically enable TLS for you
+> This method will not automatically enable TLS for you. You will also need to deactivate TLS on the client-side by setting the environment variable `ALLOW_INSECURE` to true. 
 
 Deploy PF to Multipass with the following steps. First, download the [cloud-config.txt](https://raw.githubusercontent.com/fonoster/fonos/main/operator/cloud-config.txt) file into a local directory with:
 
@@ -10,13 +10,7 @@ Deploy PF to Multipass with the following steps. First, download the [cloud-conf
 curl https://raw.githubusercontent.com/fonoster/fonos/main/operator/cloud-config.txt -o cloud-config.txt
 ```
 
-Since we are running locally, we have to modify the cloud-config to discover the private ipv4 instead of the public ipv4. First, update your cloud config with:
-
-```bash
-sed -i.bak -e "s#publicv4#privatev4#g" "cloud-config.txt"
-```
-
-Then, from the same directory, fire up Multipass
+Be sure to update the environment variables to meet your requirements. Then, from the same directory, fire up Multipass:
 
 ```bash
 multipass launch --name fonos --disk 10G --cpus 2 --mem 4G --cloud-init cloud-config.txt

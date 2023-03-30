@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -16,9 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import Auth from "@fonos/auth";
-import Numbers from "@fonos/numbers";
-import logger from "@fonos/logger";
+import Auth from "@fonoster/auth";
+import Numbers from "@fonoster/numbers";
+import logger from "@fonoster/logger";
+import WebSocket from "ws";
 import {CallRequest} from "./types";
 import {sendCallRequest} from "./utils/send_call_request";
 import {getChannelVar, getChannelVarAsJson} from "./utils/channel_variable";
@@ -28,9 +29,13 @@ import {playbackFinishedHandler} from "./handlers/playback_finished";
 import {recordFinishHandler} from "./handlers/record_finished";
 import {uploadRecording} from "./utils/upload_recording";
 import {recordFailedHandler} from "./handlers/record_failed";
-import {destroyBridge, hangup} from "./utils/destroy_channel";
+import {hangup, hangupExternalChannel} from "./utils/destroy_channel";
 import {channelTalkingHandler} from "./handlers/channel_talking";
-import WebSocket from "ws";
+import {sendDtmf} from "./handlers/send_dtmf";
+import {answer} from "./utils/answer_channel";
+import {dial} from "./handlers/dial";
+import { ulogger, ULogType } from "@fonoster/logger/src/logger";
+
 const wsConnections = new Map();
 
 // First try the short env but fallback to the cannonical version
@@ -48,7 +53,7 @@ export default function (err: any, ari: any) {
     if (!didInfo) {
       // If DID_INFO is not set we need to ignore the event
       logger.silly(
-        `@fonos/dispatcher DID_INFO variable not found [ignoring event]`
+        `@fonoster/dispatcher DID_INFO variable not found [ignoring event]`
       );
       return;
     }
@@ -68,7 +73,7 @@ export default function (err: any, ari: any) {
     const metadata = await getChannelVarAsJson(channel, "METADATA");
 
     logger.verbose(
-      `@fonos/dispatcher stasis start [
+      `@fonoster/dispatcher stasis start [
       \r sessionId   = ${channel.id}
       \r e164Number  = ${didInfo}
       \r webhook     = ${webhook}
@@ -90,11 +95,11 @@ export default function (err: any, ari: any) {
       callerId: event.channel.caller.name,
       callerNumber: event.channel.caller.number,
       selfEndpoint: webhook,
-      metadata: metadata
+      metadata: metadata || {}
     };
 
     logger.verbose(
-      `@fonos/dispatcher sending request to mediacontroller [request = ${JSON.stringify(
+      `@fonoster/dispatcher sending request to mediacontroller [request = ${JSON.stringify(
         request,
         null,
         " "
@@ -105,15 +110,21 @@ export default function (err: any, ari: any) {
 
     ws.on("open", async () => {
       wsConnections.set(sessionId, ws);
-      await sendCallRequest(webhook, request);
+      sendCallRequest(webhook, request);
     });
 
     ws.on("error", async (e: Error) => {
+      const error = `Error communicating with your Webhook: Unable to connect with Webhook ${webhook}` 
       logger.error(
-        `@fonos/dispatcher cannot connect with voiceapp [webhook = ${webhook}]`
+        `@fonoster/dispatcher cannot connect with voiceapp [webhook = ${webhook}]`
       );
-      logger.silly(e);
-      await channel.hangup();
+      ulogger({
+        accessKeyId: request.accessKeyId,
+        eventType: ULogType.APP,
+        level: "error",
+        message: error
+      })
+      channel.hangup();
     });
 
     channel.on("ChannelTalkingStarted", async (event: any, channel: any) => {
@@ -123,11 +134,31 @@ export default function (err: any, ari: any) {
     channel.on("ChannelTalkingFinished", async (event: any, channel: any) => {
       channelTalkingHandler(wsConnections.get(channel.id), channel.id, false);
     });
+
+    channel.on("ChannelLeftBridge", async (event: any, resources: any) => {
+      logger.verbose(
+        `@fonoster/dispatcher channel left bridge [bridgeId = ${resources.bridge.id}, channelId = ${resources.channel.id}]`
+      );
+      try {
+        await channel.hangup();
+      } catch (e) {
+        /* Ignore because because channel might not exist anymore */
+      }
+      try {
+        await resources.bridge.destroy();
+      } catch (e) {
+        /* Ignore because the bridge might not exist anymore */
+      }
+    });
   });
 
   ari.on("ChannelUserevent", async (event: any) => {
     logger.verbose(
-      `@fonos/dispatcher [got user event = ${JSON.stringify(event, null, " ")}]`
+      `@fonoster/dispatcher [got user event = ${JSON.stringify(
+        event,
+        null,
+        " "
+      )}]`
     );
     const wsClient = wsConnections.get(event.userevent.sessionId);
 
@@ -136,7 +167,7 @@ export default function (err: any, ari: any) {
         await externalMediaHandler(wsClient, ari, event);
         break;
       case "StopExternalMedia":
-        destroyBridge(ari, event.userevent.sessionId);
+        await hangupExternalChannel(ari, event.userevent.sessionId);
         break;
       case "UploadRecording":
         await uploadRecording(
@@ -144,12 +175,21 @@ export default function (err: any, ari: any) {
           event.userevent.filename
         );
         break;
+      case "SendDtmf":
+        await sendDtmf(wsClient, ari, event);
+        break;
       case "Hangup":
-        await hangup(ari, event.userevent.sessionId, false);
+        await hangup(ari, event.userevent.sessionId);
+        break;
+      case "Answer":
+        await answer(wsClient, ari, event.userevent.sessionId);
+        break;
+      case "Dial":
+        await dial(wsClient, ari, event, event.userevent.accessKeyId);
         break;
       default:
         logger.error(
-          `@fonos/dispatcher unknown user ever [name = ${event.eventname}]`
+          `@fonoster/dispatcher unknown user event [name = ${event.eventname}]`
         );
     }
   });
@@ -161,16 +201,14 @@ export default function (err: any, ari: any) {
   ari.on("PlaybackFinished", async (event: any, playback: any) => {
     playbackFinishedHandler(
       wsConnections.get(event.playback.target_uri.split(":")[1]),
-      event,
       playback
     );
   });
 
   ari.on("RecordingFinished", (event: any) => {
-    recordFinishHandler(
-      wsConnections.get(event.recording.target_uri.split(":")[1]),
-      event
-    );
+    const conn = wsConnections.get(event.recording.name);
+    // Connection could be null if recording a dialed channel
+    conn && recordFinishHandler(conn, event);
   });
 
   ari.on("RecordingFailed", (event: any) => {
@@ -180,8 +218,21 @@ export default function (err: any, ari: any) {
     );
   });
 
-  ari.on("StasisEnd", (event: any, channel: any) => {
-    logger.verbose(`@fonos/dispatcher stasis end [sessionId = ${channel.id}]`);
+  ari.on("StasisEnd", async (event: any, channel: any) => {
+    logger.verbose(
+      `@fonoster/dispatcher stasis end [sessionId = ${channel.id}]`
+    );
+    const ws = wsConnections.get(channel.id);
+    // The external channels don't have ws connections
+    if (ws) {
+      ws.send(
+        JSON.stringify({
+          type: "SessionClosed",
+          sessionId: channel.id
+        })
+      );
+      wsConnections.delete(channel.id);
+    }
   });
 
   ari.start("mediacontroller");

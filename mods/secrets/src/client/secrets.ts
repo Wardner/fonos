@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {FonosService, ServiceOptions} from "@fonos/common";
+import {APIClient, ClientOptions} from "@fonoster/common";
 import {SecretsClient} from "../service/protos/secrets_grpc_pb";
 import SecretPB from "../service/protos/secrets_pb";
 import CommonPB from "../service/protos/common_pb";
@@ -25,56 +25,56 @@ import {
   CreateSecretRequest,
   CreateSecretResponse,
   GetSecretResponse,
-  ListSecretRequest,
-  ListSecretResponse
+  ISecretsClient,
+  ListSecretsRequest,
+  ListSecretsResponse
 } from "./types";
 
 /**
- * @classdesc Use Fonos Secrets, a capability of Fonos Secrets Service,
- * to create and manage your secrets. Fonos Secrets requires of a
- * running Fonos deployment.
+ * @classdesc Use Fonoster Secrets, a capability of Fonoster Secrets Service,
+ * to create and manage your secrets. Fonoster Secrets requires of a
+ * running Fonoster deployment.
  *
- * @extends FonosService
+ * @extends APIClient
  * @example
  *
- * const Fonos = require("@fonos/sdk")
- * const secrets = new Fonos.Secrets()
+ * const Fonoster = require("@fonoster/sdk")
+ * const secrets = new Fonoster.Secrets()
  *
  * const request = {
- *    secretName: "Jenkins",
+ *    secretName: "my-secret",
  *    secret: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
  * };
  *
  * secrets.createSecret(request)
  * .then(result => {
- *   console.log(result) // returns the CreateDomainResponse interface
+ *   console.log(result) // message with the CreateSecretResponse interface
  * }).catch(e => console.error(e)); // an error occurred
  */
-export default class Secrets extends FonosService {
+export default class Secrets extends APIClient implements ISecretsClient {
   /**
-   * Constructs a Secret Object.
+   * Constructs a Secrets Object.
    *
-   * @param {ServiceOptions} options - Options to indicate the objects endpoint
-   * @see module:core:FonosService
+   * @param {ClientOptions} options - Options to indicate the objects endpoint
+   * @see module:core:APIClient
    */
-  constructor(options?: ServiceOptions) {
+  constructor(options?: ClientOptions) {
     super(SecretsClient, options);
     super.init();
     promisifyAll(super.getService(), {metadata: super.getMeta()});
   }
 
   /**
-   * Creates a new Secret.
+   * Creates and stores a new secret.
    *
-   * @param {CreateSecretRequest} request - Request for the provision of
-   * a new Secret
-   * @param {string} request.name - Friendly name for the Secret
-   * @param {string} request.secret - secret to be save
+   * @param {CreateSecretRequest} request - Request to create a new secret
+   * @param {string} request.name - Friendly name for the secret
+   * @param {string} request.secret - Actual secret
    * @return {Promise<CreateSecretResponse>}
    * @example
    *
    * const request = {
-   *    secretName: "Jenkins",
+   *    name: "my-secret",
    *    secret: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
    * };
    *
@@ -105,23 +105,22 @@ export default class Secrets extends FonosService {
   }
 
   /**
-   * Get a Secret.
+   * Gets a secret by name.
    *
-   * @param {CreateSecretRequest} request - Request for the provision of
-   * a new Secret
+   * @param {CreateSecretRequest} request - Request to create a new Secret
    * @param {string} request.name - Friendly name for the Secret
-   * @param {string} request.secret - secret to be save
+   * @param {string} request.secret - Secret to save
    * @return {Promise<CreateSecretResponse>}
    * @example
    *
    * const request = {
-   *    secretName: "Jenkins",
+   *    name: "my-secret",
    *    secret: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
    * };
    *
    * secrets.createSecret(request)
    * .then(result => {
-   *   console.log(result) // returns the CreateDomainResponse interface
+   *   console.log(result) // returns the GetSecretResponse interface
    * }).catch(e => console.error(e)); // an error occurred
    */
   async getSecret(name: string): Promise<GetSecretResponse> {
@@ -140,7 +139,7 @@ export default class Secrets extends FonosService {
   }
 
   /**
-   * List all user secrets.
+   * List all the secrets for current Project.
    *
    * @param {ListSecretRequest} request - Request for the provision of
    * a new Secret
@@ -154,13 +153,13 @@ export default class Secrets extends FonosService {
    *    pageToken: 1
    * };
    *
-   * secrets.listSecret(request)
+   * secrets.listSecrets(request)
    * .then(result => {
-   *   console.log(result) // returns the CreateDomainResponse interface
+   *   console.log(result)
    * }).catch(e => console.error(e)); // an error occurred
    */
-  async listSecret(request: ListSecretRequest): Promise<ListSecretResponse> {
-    const req = new SecretPB.ListSecretIdRequest();
+  async listSecrets(request: ListSecretsRequest): Promise<ListSecretsResponse> {
+    const req = new SecretPB.ListSecretsIdRequest();
     req.setPageSize(request.pageSize);
     req.setPageToken(request.pageToken);
     const paginatedList = await this.getService()
@@ -169,24 +168,23 @@ export default class Secrets extends FonosService {
 
     return {
       nextPageToken: paginatedList.getNextPageToken(),
-      secrets: paginatedList.getSecretsList().map((secret: SecretPB.Secret) => {
+      secrets: paginatedList.getSecretsList().map((name: string) => {
         return {
-          name: secret.getName()
+          name
         };
       })
     };
   }
 
   /**
-   * Retrives a Secret using its reference.
+   * Removes a secret by name.
    *
-   * @param {string} request - Reference to Secret
-   * @return {Promise<void>} The domain
+   * @param {string} name - Secret name
    * @example
    *
-   * secrets.deleteSecret("jenkins")
+   * secrets.deleteSecret("my-secret")
    * .then(() => {
-   *   console.log("successful")      // returns the CreateGetResponse interface
+   *   console.log("successful")
    * }).catch(e => console.error(e)); // an error occurred
    */
   async deleteSecret(name: string): Promise<void> {
@@ -196,7 +194,7 @@ export default class Secrets extends FonosService {
   }
 }
 
-export {SecretPB, CommonPB};
+export {SecretPB, CommonPB, ISecretsClient};
 
 // WARNING: Workaround for support to commonjs clients
 module.exports = Secrets;

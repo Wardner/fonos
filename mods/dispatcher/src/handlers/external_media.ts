@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -18,8 +18,9 @@
  */
 import WebSocket from "ws";
 import UDPMediaReceiver from "../udp_media_receiver";
-import logger from "@fonos/logger";
-import {getRandomPort, sendData, streamConfig} from "../utils/udp_server_utils";
+import logger from "@fonoster/logger";
+import {sendData, streamConfig} from "../utils/udp_server_utils";
+import pickPort from "pick-port";
 
 export const externalMediaHandler = async (
   ws: WebSocket,
@@ -27,11 +28,13 @@ export const externalMediaHandler = async (
   event: any
 ) => {
   if (!ws || ws.readyState !== WebSocket.OPEN) {
-    logger.warn(`@fonos/dispatcher ignoring socket request on lost connection`);
+    logger.warn(
+      `@fonoster/dispatcher ignoring socket request on lost connection`
+    );
     return;
   }
-  // WARNING: We should check if the port was taken
-  const address = `0.0.0.0:${getRandomPort()}`;
+  const port = await pickPort();
+  const address = `0.0.0.0:${port}`;
   const udpServer = new UDPMediaReceiver(address, true);
   const bridge = ari.Bridge();
   const externalChannel = ari.Channel();
@@ -45,6 +48,24 @@ export const externalMediaHandler = async (
     bridge.addChannel({channel: channel.id})
   );
 
+  externalChannel.on("StasisEnd", () => {
+    try {
+      udpServer.close();
+    } catch (e) {
+      console.warn(e);
+    }
+  });
+
+  externalChannel.on(
+    "ChannelLeftBridge",
+    async (event: any, resources: any) => {
+      logger.verbose(
+        `@fonoster/dispatcher external channel left bridge [bridgeId = ${resources.bridge.id}, channelId = ${resources.channel.id}]`
+      );
+      await resources.channel.hangup();
+    }
+  );
+
   // We save the bridge id as channel bar and later use the info
   // to destroy the bridge
   ari.channels.setChannelVar({
@@ -53,9 +74,18 @@ export const externalMediaHandler = async (
     value: bridge.id
   });
 
+  // We save the bridge id as channel bar and later use the info
+  // to destroy the bridge
+  ari.channels.setChannelVar({
+    channelId: sessionId,
+    variable: "EXTERNAL_CHANNEL",
+    value: externalChannel.id
+  });
+
   // Collecting and forwarding media
   udpServer
     .getServer()
     .on("data", (data: Buffer) => sendData(ws, data, sessionId));
+
   await externalChannel.externalMedia(streamConfig(address));
 };

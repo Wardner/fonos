@@ -1,11 +1,14 @@
-// package: fonos.auth.v1beta1
+// package: fonoster.auth.v1beta1
 // file: auth.proto
 
 /* tslint:disable */
 /* eslint-disable */
 
 import * as grpc from "@grpc/grpc-js";
+import {handleClientStreamingCall} from "@grpc/grpc-js/build/src/server-call";
 import * as auth_pb from "./auth_pb";
+import * as protoc_gen_openapiv2_options_annotations_pb from "./protoc-gen-openapiv2/options/annotations_pb";
+import * as google_api_field_behavior_pb from "./google/api/field_behavior_pb";
 
 interface IAuthService extends grpc.ServiceDefinition<grpc.UntypedServiceImplementation> {
     getRole: IAuthService_IGetRole;
@@ -15,7 +18,7 @@ interface IAuthService extends grpc.ServiceDefinition<grpc.UntypedServiceImpleme
 }
 
 interface IAuthService_IGetRole extends grpc.MethodDefinition<auth_pb.GetRoleRequest, auth_pb.Role> {
-    path: "/fonos.auth.v1beta1.Auth/GetRole";
+    path: "/fonoster.auth.v1beta1.Auth/GetRole";
     requestStream: false;
     responseStream: false;
     requestSerialize: grpc.serialize<auth_pb.GetRoleRequest>;
@@ -24,7 +27,7 @@ interface IAuthService_IGetRole extends grpc.MethodDefinition<auth_pb.GetRoleReq
     responseDeserialize: grpc.deserialize<auth_pb.Role>;
 }
 interface IAuthService_IValidateToken extends grpc.MethodDefinition<auth_pb.ValidateTokenRequest, auth_pb.ValidateTokenResponse> {
-    path: "/fonos.auth.v1beta1.Auth/ValidateToken";
+    path: "/fonoster.auth.v1beta1.Auth/ValidateToken";
     requestStream: false;
     responseStream: false;
     requestSerialize: grpc.serialize<auth_pb.ValidateTokenRequest>;
@@ -33,7 +36,7 @@ interface IAuthService_IValidateToken extends grpc.MethodDefinition<auth_pb.Vali
     responseDeserialize: grpc.deserialize<auth_pb.ValidateTokenResponse>;
 }
 interface IAuthService_ICreateToken extends grpc.MethodDefinition<auth_pb.CreateTokenRequest, auth_pb.CreateTokenResponse> {
-    path: "/fonos.auth.v1beta1.Auth/CreateToken";
+    path: "/fonoster.auth.v1beta1.Auth/CreateToken";
     requestStream: false;
     responseStream: false;
     requestSerialize: grpc.serialize<auth_pb.CreateTokenRequest>;
@@ -42,7 +45,7 @@ interface IAuthService_ICreateToken extends grpc.MethodDefinition<auth_pb.Create
     responseDeserialize: grpc.deserialize<auth_pb.CreateTokenResponse>;
 }
 interface IAuthService_ICreateNoAccessToken extends grpc.MethodDefinition<auth_pb.CreateTokenRequest, auth_pb.CreateTokenResponse> {
-    path: "/fonos.auth.v1beta1.Auth/CreateNoAccessToken";
+    path: "/fonoster.auth.v1beta1.Auth/CreateNoAccessToken";
     requestStream: false;
     responseStream: false;
     requestSerialize: grpc.serialize<auth_pb.CreateTokenRequest>;

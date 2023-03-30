@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -16,8 +16,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import FonosService from "./fonos_service";
-import {ServiceOptions} from "./types";
+import APIClient from "./api_client";
+import WebAPIClient from "./web_client";
+import {ClientOptions, WebClientOptions} from "./types";
 import {getClientCredentials, getServerCredentials} from "./trust_util";
 //import healthcheck from "./healthcheck";
 import runServices from "./service_runner";
@@ -30,8 +31,10 @@ import {
 } from "./speech/types";
 
 export {
-  FonosService,
-  ServiceOptions,
+  APIClient,
+  WebAPIClient,
+  WebClientOptions,
+  ClientOptions,
   Plugin,
   SpeechTracker,
   SpeechResult,

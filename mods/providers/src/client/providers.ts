@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -21,27 +21,28 @@ import {
   CreateProviderResponse,
   UpdateProviderRequest,
   UpdateProviderResponse,
-  ListProviderRequest,
-  ListProviderResponse,
+  ListProvidersRequest,
+  ListProvidersResponse,
   GetProviderResponse,
-  DeleteProviderResponse
-} from "../types";
-import {FonosService, ServiceOptions} from "@fonos/common";
+  DeleteProviderResponse,
+  IProvidersClient
+} from "./types";
+import {APIClient, ClientOptions} from "@fonoster/common";
 import {ProvidersClient} from "../service/protos/providers_grpc_pb";
 import ProvidersPB from "../service/protos/providers_pb";
 import CommonPB from "../service/protos/common_pb";
 import {promisifyAll} from "grpc-promise";
 
 /**
- * @classdesc Use Fonos Providers, a capability of Fonos SIP Proxy subsystem,
- * to create, update, get and delete providers. Fonos Providers requires of a
- * running Fonos deployment.
+ * @classdesc Use Fonoster Providers, a capability of Fonoster SIP Proxy subsystem,
+ * to create, update, get and delete providers. Fonoster Providers requires of a
+ * running Fonosterdeployment.
  *
- * @extends FonosService
+ * @extends APIClient
  * @example
  *
- * const Fonos = require("@fonos/sdk");
- * const providers = new Fonos.Providers();
+ * const Fonoster = require("@fonoster/sdk");
+ * const providers = new Fonoster.Providers();
  *
  * const request = {
  *   name: "SIP Provider",
@@ -55,14 +56,14 @@ import {promisifyAll} from "grpc-promise";
  *   console.log(result)             // successful response
  * }).catch(e => console.error(e));   // an error occurred
  */
-export default class Providers extends FonosService {
+export default class Providers extends APIClient implements IProvidersClient {
   /**
    * Constructs a new Providers object.
    *
-   * @param {ServiceOptions} options - Options to indicate the objects endpoint
-   * @see module:core:FonosService
+   * @param {ClientOptions} options - Options to indicate the objects endpoint
+   * @see module:core:APIClient
    */
-  constructor(options?: ServiceOptions) {
+  constructor(options?: ClientOptions) {
     super(ProvidersClient, options);
     super.init();
     promisifyAll(super.getService(), {metadata: super.getMeta()});
@@ -79,9 +80,9 @@ export default class Providers extends FonosService {
    * static IP authentication
    * @param {string} request.host - Hostname or IP of the Provider
    * @param {string} request.transport - The transport for the Provider.
-   * Fonos will use TCP if none is provided
+   *Fonoster will use TCP if none is provided
    * @param {string} request.expires - Expiration time for the registration.
-   * Fonos will use 3600 if non is provided
+   *Fonoster will use 3600 if non is provided
    * @return {Promise<Object>}
    * @example
    *
@@ -100,16 +101,13 @@ export default class Providers extends FonosService {
   async createProvider(
     request: CreateProviderRequest
   ): Promise<CreateProviderResponse> {
-    const provider = new ProvidersPB.Provider();
-    provider.setName(request.name);
-    provider.setUsername(request.username);
-    provider.setSecret(request.secret);
-    provider.setHost(request.host);
-    provider.setTransport(request.transport || "tcp");
-    provider.setExpires(request.expires || 3600);
-
     const req = new ProvidersPB.CreateProviderRequest();
-    req.setProvider(provider);
+    req.setName(request.name);
+    req.setUsername(request.username);
+    req.setSecret(request.secret);
+    req.setHost(request.host);
+    req.setTransport(request.transport || "tcp");
+    req.setExpires(request.expires || 3600);
 
     const res = await super.getService().createProvider().sendMessage(req);
 
@@ -170,9 +168,9 @@ export default class Providers extends FonosService {
    * static IP authentication
    * @param {string} request.host - Hostname or IP of the Provider
    * @param {string} request.transport - The transport for the Provider.
-   * Fonos will use TCP if none is provided
+   *Fonoster will use TCP if none is provided
    * @param {string} request.expires - Expiration time for the registration.
-   * Fonos will use 3600 if non is provided
+   *Fonoster will use 3600 if non is provided
    * @return {Promise<Object>}
    * @example
    *
@@ -189,21 +187,14 @@ export default class Providers extends FonosService {
   async updateProvider(
     request: UpdateProviderRequest
   ): Promise<UpdateProviderResponse> {
-    const getProviderRequest = new ProvidersPB.GetProviderRequest();
-    getProviderRequest.setRef(request.ref);
-    const provider = await this.getService()
-      .getProvider()
-      .sendMessage(getProviderRequest);
-
-    if (request.name) provider.setName(request.name);
-    if (request.username) provider.setUsername(request.username);
-    if (request.secret) provider.setSecret(request.secret);
-    if (request.host) provider.setHost(request.host);
-    if (request.transport) provider.setTransport(request.transport);
-    if (request.expires) provider.setExpires(request.expires);
-
     const req = new ProvidersPB.UpdateProviderRequest();
-    req.setProvider(provider);
+    req.setRef(request.ref);
+    if (request.name) req.setName(request.name);
+    if (request.username) req.setUsername(request.username);
+    if (request.secret) req.setSecret(request.secret);
+    if (request.host) req.setHost(request.host);
+    if (request.transport) req.setTransport(request.transport);
+    if (request.expires) req.setExpires(request.expires);
 
     const res = await super.getService().updateProvider().sendMessage(req);
 
@@ -213,7 +204,7 @@ export default class Providers extends FonosService {
   }
 
   /**
-   * List the Providers registered in Fonos SIP Proxy subsystem.
+   * List the Providers registered in Fonoster SIP Proxy subsystem.
    *
    * @param {Object} request
    * @param {provider} request.pageSize - Provider of element per page
@@ -234,8 +225,8 @@ export default class Providers extends FonosService {
    * }).catch(e => console.error(e));  // an error occurred
    */
   async listProviders(
-    request: ListProviderRequest
-  ): Promise<ListProviderResponse> {
+    request: ListProvidersRequest
+  ): Promise<ListProvidersResponse> {
     const r = new ProvidersPB.ListProvidersRequest();
     r.setPageSize(request.pageSize);
     r.setPageToken(request.pageToken);
@@ -287,7 +278,7 @@ export default class Providers extends FonosService {
   }
 }
 
-export {ProvidersPB, CommonPB};
+export {ProvidersPB, CommonPB, IProvidersClient};
 
 // WARNING: Workaround to support commonjs clients
 module.exports = Providers;

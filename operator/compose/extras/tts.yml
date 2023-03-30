@@ -3,12 +3,12 @@
 version: '3.7'
 
 networks:
-  fonos:
+  fonoster:
 
 services:
 
   tts:
-    image: ${TTS_IMAGE}
+    image: fonoster/marytts:${COMPOSE_PROJECT_VERSION}
     restart: ${RESTART_POLICY}
     labels:
       - "traefik.enable=true"
@@ -23,7 +23,7 @@ services:
       timeout: 20s
       retries: 3
     networks:
-      fonos:
+      fonoster:
         aliases: 
           - ${TTS_ENGINE_HOST}
     logging:

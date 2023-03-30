@@ -1,10 +1,12 @@
-// package: fonos.providers.v1beta1
+// package: fonoster.providers.v1beta1
 // file: providers.proto
 
 /* tslint:disable */
 /* eslint-disable */
 
 import * as jspb from "google-protobuf";
+import * as protoc_gen_openapiv2_options_annotations_pb from "./protoc-gen-openapiv2/options/annotations_pb";
+import * as google_api_field_behavior_pb from "./google/api/field_behavior_pb";
 import * as common_pb from "./common_pb";
 
 export class ListProvidersRequest extends jspb.Message { 
@@ -59,11 +61,18 @@ export namespace ListProvidersResponse {
 }
 
 export class CreateProviderRequest extends jspb.Message { 
-
-    hasProvider(): boolean;
-    clearProvider(): void;
-    getProvider(): Provider | undefined;
-    setProvider(value?: Provider): CreateProviderRequest;
+    getName(): string;
+    setName(value: string): CreateProviderRequest;
+    getUsername(): string;
+    setUsername(value: string): CreateProviderRequest;
+    getSecret(): string;
+    setSecret(value: string): CreateProviderRequest;
+    getHost(): string;
+    setHost(value: string): CreateProviderRequest;
+    getTransport(): string;
+    setTransport(value: string): CreateProviderRequest;
+    getExpires(): number;
+    setExpires(value: number): CreateProviderRequest;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): CreateProviderRequest.AsObject;
@@ -77,16 +86,30 @@ export class CreateProviderRequest extends jspb.Message {
 
 export namespace CreateProviderRequest {
     export type AsObject = {
-        provider?: Provider.AsObject,
+        name: string,
+        username: string,
+        secret: string,
+        host: string,
+        transport: string,
+        expires: number,
     }
 }
 
 export class UpdateProviderRequest extends jspb.Message { 
-
-    hasProvider(): boolean;
-    clearProvider(): void;
-    getProvider(): Provider | undefined;
-    setProvider(value?: Provider): UpdateProviderRequest;
+    getRef(): string;
+    setRef(value: string): UpdateProviderRequest;
+    getName(): string;
+    setName(value: string): UpdateProviderRequest;
+    getUsername(): string;
+    setUsername(value: string): UpdateProviderRequest;
+    getSecret(): string;
+    setSecret(value: string): UpdateProviderRequest;
+    getHost(): string;
+    setHost(value: string): UpdateProviderRequest;
+    getTransport(): string;
+    setTransport(value: string): UpdateProviderRequest;
+    getExpires(): number;
+    setExpires(value: number): UpdateProviderRequest;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): UpdateProviderRequest.AsObject;
@@ -100,7 +123,13 @@ export class UpdateProviderRequest extends jspb.Message {
 
 export namespace UpdateProviderRequest {
     export type AsObject = {
-        provider?: Provider.AsObject,
+        ref: string,
+        name: string,
+        username: string,
+        secret: string,
+        host: string,
+        transport: string,
+        expires: number,
     }
 }
 

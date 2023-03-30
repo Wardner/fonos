@@ -1,10 +1,11 @@
-// package: fonos.funcs.v1beta1
+// package: fonoster.funcs.v1beta1
 // file: funcs.proto
 
 /* tslint:disable */
 /* eslint-disable */
 
 import * as jspb from "google-protobuf";
+import * as protoc_gen_openapiv2_options_annotations_pb from "./protoc-gen-openapiv2/options/annotations_pb";
 import * as common_pb from "./common_pb";
 
 export class ListFuncsRequest extends jspb.Message { 

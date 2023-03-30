@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -41,7 +41,7 @@ import {
   Kind,
   ResourceBuilder,
   updateResource
-} from "@fonos/core";
+} from "@fonoster/core";
 import unmarshalDomain from "./decoder";
 import decoder from "./decoder";
 import isValidDomain from "is-valid-domain";
@@ -66,11 +66,11 @@ class DomainsServer implements IDomainsServer {
     call: grpc.ServerUnaryCall<CreateDomainRequest, Domain>,
     callback: grpc.sendUnaryData<Domain>
   ) {
-    const domain = call.request.getDomain();
+    const request = call.request;
 
     const domainUri = process.env.GLOBAL_SIP_DOMAIN
-      ? `${domain.getDomainUri()}.${process.env.GLOBAL_SIP_DOMAIN}`
-      : domain.getDomainUri();
+      ? `${request.getDomainUri()}.${process.env.GLOBAL_SIP_DOMAIN}`
+      : request.getDomainUri();
 
     if (isValidDomain(domainUri) == false) {
       callback(
@@ -80,19 +80,15 @@ class DomainsServer implements IDomainsServer {
       return;
     }
 
-    if (!domain.getEgressRule) {
+    if (request.getEgressNumberRef() && !request.getEgressRule()) {
       callback(new Error("Egress Rule can't be null"), null);
       return;
     }
     try {
-      const resource = new ResourceBuilder(
-        Kind.DOMAIN,
-        domain.getName(),
-        domain.getRef()
-      )
+      const resource = new ResourceBuilder(Kind.DOMAIN, request.getName(), null)
         .withDomainUri(domainUri)
-        .withEgressPolicy(domain.getEgressRule(), domain.getEgressNumberRef())
-        .withACL(domain.getAccessAllowList(), domain.getAccessDenyList())
+        .withEgressPolicy(request.getEgressRule(), request.getEgressNumberRef())
+        .withACL(request.getAccessAllowList(), request.getAccessDenyList())
         .withMetadata({accessKeyId: getAccessKeyId(call)})
         .build();
 
@@ -107,24 +103,29 @@ class DomainsServer implements IDomainsServer {
     call: grpc.ServerUnaryCall<UpdateDomainRequest, Domain>,
     callback: grpc.sendUnaryData<Domain>
   ) {
-    const domain = call.request.getDomain();
-    if (!domain.getEgressRule) {
+    const request = call.request;
+    if (request.getEgressNumberRef() && !request.getEgressRule()) {
       callback(new Error("Egress Rule can't be null"), null);
       return;
     }
     try {
+      const domain = (await ResourceServer.getResource(
+        Kind.DOMAIN,
+        call
+      )) as any;
+
+      console.log("test-> " + domain);
+
       const resource = new ResourceBuilder(
         Kind.DOMAIN,
-        domain.getName(),
-        domain.getRef()
+        request.getName(),
+        request.getRef()
       )
         .withMetadata({
-          createdOn: domain.getCreateTime(),
-          modifiedOn: domain.getUpdateTime()
+          createdOn: domain.metadata.createdOn
         })
-        .withDomainUri(domain.getDomainUri())
-        .withEgressPolicy(domain.getEgressRule(), domain.getEgressNumberRef())
-        .withACL(domain.getAccessAllowList(), domain.getAccessDenyList())
+        .withEgressPolicy(request.getEgressRule(), request.getEgressNumberRef())
+        .withACL(request.getAccessAllowList(), request.getAccessDenyList())
         .build();
 
       const result = await updateResource({

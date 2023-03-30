@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -17,9 +17,17 @@
  * limitations under the License.
  */
 import {Transform} from "stream";
-import logger from "@fonos/logger";
+import logger from "@fonoster/logger";
 import {GoogleSpeechConfig} from "./types";
 const speech = require("@google-cloud/speech").v1p1beta1;
+
+// Sending a dummy package with a different size breaks the
+// Google Speech.
+//
+// WARNING: This is the package size comming from asterisk, but
+// keep in mind that length (640) might be different for other encoding
+// types.
+const emptyBuffer = Buffer.alloc(640, 0);
 
 export default class StreamRecognize {
   speechClient: any;
@@ -40,6 +48,7 @@ export default class StreamRecognize {
   resultsCallback: any;
   socket: any;
   cb: (stream: any) => void;
+  currentTimer: NodeJS.Timeout;
   constructor(
     config: GoogleSpeechConfig,
     socket,
@@ -61,7 +70,7 @@ export default class StreamRecognize {
     this.newStream = true;
     this.bridgingOffset = 0;
     this.lastTranscriptWasFinal = false;
-    this.streamingLimit = 60000;
+    this.streamingLimit = 290000; // 4.8 minutes
 
     this.audioInputStreamTransform = new Transform({
       transform: (chunk, encoding, callback) => {
@@ -75,6 +84,13 @@ export default class StreamRecognize {
     this.socket = socket;
     // This connects the socket to the Stream Transform
     socket.pipe(this.audioInputStreamTransform);
+
+    // TODO: We should clear this interval once we finish using the class
+    setInterval(() => {
+      if (this.recognizeStream) {
+        this.recognizeStream.write(emptyBuffer);
+      }
+    }, 5000);
   }
 
   startStream() {
@@ -95,6 +111,11 @@ export default class StreamRecognize {
       }
     };
 
+    // Restart stream when streamingLimit expires
+    this.currentTimer = setTimeout(() => {
+      this.restartStream();
+    }, this.streamingLimit);
+
     // Initiate (Reinitiate) a recognize stream
     this.recognizeStream = this.speechClient
       .streamingRecognize(this.request)
@@ -102,15 +123,14 @@ export default class StreamRecognize {
         if (err.code === 11) {
           // this.restartStream();
         } else {
-          logger.error("API request error " + err);
+          // If we get any errors we restart the stream.
+          // This will tipically happen if no audio is sent for
+          // a period if 10 seconds.
+          this.restartStream();
+          logger.silly(err);
         }
       })
       .on("data", this.cb);
-
-    // Restart stream when streamingLimit expires
-    setTimeout(() => {
-      this.restartStream();
-    }, this.streamingLimit);
   }
 
   speechCallback(stream) {
@@ -133,7 +153,10 @@ export default class StreamRecognize {
    * when we restart the stream.
    */
   transformer(chunk, encoding, callback) {
-    if (this.newStream && this.lastAudioInput.length !== 0) {
+    // WARNING: This synchronization logic is causing the class
+    // to send repeated streams inmediatly after restarting the
+    // recognition.
+    /*if (this.newStream && this.lastAudioInput.length !== 0) {
       // Approximate math to calculate time of chunks
       const chunkTime = this.streamingLimit / this.lastAudioInput.length;
       if (chunkTime !== 0) {
@@ -155,7 +178,7 @@ export default class StreamRecognize {
       }
       this.newStream = false;
     }
-    this.audioInput.push(chunk);
+    this.audioInput.push(chunk);*/
 
     if (this.recognizeStream) {
       this.recognizeStream.write(chunk);
@@ -165,10 +188,7 @@ export default class StreamRecognize {
   }
 
   restartStream() {
-    if (this.recognizeStream) {
-      this.recognizeStream.removeListener("data", this.cb);
-      this.recognizeStream = null;
-    }
+    this.stop();
 
     if (this.resultEndTime > 0) {
       this.finalRequestEndTime = this.isFinalEndTime;
@@ -185,5 +205,14 @@ export default class StreamRecognize {
 
     this.newStream = true;
     this.startStream();
+  }
+
+  stop() {
+    logger.silly("destroying stream recognize");
+    if (this.recognizeStream) {
+      this.recognizeStream.end();
+      this.recognizeStream.removeListener("data", this.cb);
+      this.recognizeStream = null;
+    }
   }
 }

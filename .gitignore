@@ -7,6 +7,7 @@
 node_modules
 coverage
 .nyc_output
+*.DS_Store
 *.tar.gz
 *.zip
 build
@@ -25,6 +26,7 @@ site
 lerna-debug.log
 mods/**/src/protos/common.proto
 !mods/core/src/protos/common.proto
+swagger.json
 
 # User-specific stuff:
 .idea/workspace.xml

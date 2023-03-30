@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -19,7 +19,7 @@
  */
 import ari from "ari-client";
 import wait from "wait-port";
-import logger from "@fonos/logger";
+import logger from "@fonoster/logger";
 import events from "./events_handler";
 
 // First try the short env but fallback to the cannonical env
@@ -40,7 +40,11 @@ const connection = {
 wait(connection)
   .then((open) => {
     if (open) {
-      ari.connect(ariHost, ariUsername, ariSecret, events);
+      // Give time to Media Server to publish the API endpoint
+      setTimeout(
+        () => ari.connect(ariHost, ariUsername, ariSecret, events),
+        10000
+      )
       return;
     }
 

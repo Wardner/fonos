@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -26,13 +26,13 @@ import {
   CreateTokenResponse
 } from "./protos/auth_pb";
 import {IAuthServer, IAuthService, AuthService} from "./protos/auth_grpc_pb";
-import {ErrorCodes, FonosError} from "@fonos/errors";
-import {getSalt, AUTH_ISS} from "@fonos/certs";
-import logger from "@fonos/logger";
+import {ErrorCodes, FonosterError} from "@fonoster/errors";
+import {getSalt, AUTH_ISS} from "@fonoster/certs";
+import logger from "@fonoster/logger";
 import Auth from "../utils/auth_utils";
 import JWT from "../utils/jwt";
 const authenticator = new Auth(new JWT());
-const rbac = require(process.env.AUTH_RBAC || "/home/fonos/rbac.json");
+const rbac = require(process.env.AUTH_RBAC || "/home/fonoster/rbac.json");
 
 class AuthServer implements IAuthServer {
   [name: string]: grpc.UntypedHandleCall;
@@ -53,11 +53,11 @@ class AuthServer implements IAuthServer {
     call: grpc.ServerUnaryCall<CreateTokenRequest, CreateTokenResponse>,
     callback: grpc.sendUnaryData<CreateTokenResponse>
   ) {
-    // WARNING: We need to validate the token and verify
+    // TODO: We need to validate the token and verify
     // it has permissions to create token since the auth module
     // doesnt pass thru the auth middleware.
     logger.verbose(
-      `@fonos/auth creating token [accessKeyId is ${call.request.getAccessKeyId()}]`
+      `@fonoster/auth creating token [accessKeyId is ${call.request.getAccessKeyId()}]`
     );
     const result = await authenticator.createToken(
       call.request.getAccessKeyId(),
@@ -75,16 +75,15 @@ class AuthServer implements IAuthServer {
     call: grpc.ServerUnaryCall<CreateTokenRequest, CreateTokenResponse>,
     callback: grpc.sendUnaryData<CreateTokenResponse>
   ) {
-    // WARNING: We need to validate the token and verify
+    // TODO: We need to validate the token and verify
     // it has permissions to create token since the auth module
     // doesnt pass thru the auth middleware.
     logger.verbose(
-      `@fonos/auth creating no access token [accessKeyId is ${call.request.getAccessKeyId()}]`
+      `@fonoster/auth creating no access token [accessKeyId is ${call.request.getAccessKeyId()}]`
     );
     const result = await authenticator.createToken(
       call.request.getAccessKeyId(),
       AUTH_ISS,
-      // WARNING: Harcoded value
       "NO_ACCESS",
       getSalt(),
       "1d"
@@ -109,9 +108,9 @@ class AuthServer implements IAuthServer {
         return;
       }
 
-      callback(new FonosError("Role not found", ErrorCodes.NOT_FOUND), null);
+      callback(new FonosterError("Role not found", ErrorCodes.NOT_FOUND), null);
     } catch (e) {
-      callback(new FonosError(e, ErrorCodes.UNKNOWN), null);
+      callback(new FonosterError(e, ErrorCodes.UNKNOWN), null);
     }
   }
 }

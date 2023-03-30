@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -20,7 +20,7 @@ import chai from "chai";
 import sinon from "sinon";
 import sinonChai from "sinon-chai";
 import chaiAsPromised from "chai-as-promised";
-import {FonosService} from "@fonos/common";
+import {APIClient} from "@fonoster/common";
 import Providers, {ProvidersPB} from "../src/client/providers";
 import providerDecoder from "../src/service/decoder";
 
@@ -29,7 +29,7 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 const sandbox = sinon.createSandbox();
 
-describe("@Fonos/providers", () => {
+describe("@fonoster/providers", () => {
   const providerObj = new ProvidersPB.Provider();
   providerObj.setRef("Nx05y-ldZa");
   providerObj.setName("Fake Provider");
@@ -44,9 +44,9 @@ describe("@Fonos/providers", () => {
   afterEach(() => sandbox.restore());
 
   it("should create a provider", async () => {
-    sandbox.stub(FonosService.prototype, "init").returns();
+    sandbox.stub(APIClient.prototype, "init").returns();
     const serviceStub = sandbox
-      .stub(FonosService.prototype, "getService")
+      .stub(APIClient.prototype, "getService")
       .returns({
         createProvider: () => {
           return {
@@ -82,9 +82,9 @@ describe("@Fonos/providers", () => {
   });
 
   it("should get a provider", async () => {
-    sandbox.stub(FonosService.prototype, "init").returns();
+    sandbox.stub(APIClient.prototype, "init").returns();
     const serviceStub = sandbox
-      .stub(FonosService.prototype, "getService")
+      .stub(APIClient.prototype, "getService")
       .returns({
         getProvider: () => {
           return {
@@ -110,9 +110,9 @@ describe("@Fonos/providers", () => {
   });
 
   it("should delete a Provider", async () => {
-    sandbox.stub(FonosService.prototype, "init").returns();
+    sandbox.stub(APIClient.prototype, "init").returns();
     const serviceStub = sandbox
-      .stub(FonosService.prototype, "getService")
+      .stub(APIClient.prototype, "getService")
       .returns({
         deleteProvider: () => {
           return {
@@ -128,9 +128,9 @@ describe("@Fonos/providers", () => {
   });
 
   it("should list providers", async () => {
-    sandbox.stub(FonosService.prototype, "init").returns();
+    sandbox.stub(APIClient.prototype, "init").returns();
     const serviceStub = sandbox
-      .stub(FonosService.prototype, "getService")
+      .stub(APIClient.prototype, "getService")
       .returns({
         listProviders: () => {
           return {
@@ -188,9 +188,9 @@ describe("@Fonos/providers", () => {
       updateTime: providerObj.getUpdateTime()
     };
 
-    sandbox.stub(FonosService.prototype, "init").returns();
+    sandbox.stub(APIClient.prototype, "init").returns();
     const updateProviderStub = sandbox
-      .stub(FonosService.prototype, "getService")
+      .stub(APIClient.prototype, "getService")
       .returns({
         updateProvider: () => {
           return {
@@ -208,7 +208,7 @@ describe("@Fonos/providers", () => {
     const providerAPI = new Providers();
     const result = await providerAPI.updateProvider(request);
     expect(result).to.have.property("ref").to.be.equal(returnProvider.ref);
-    expect(updateProviderStub).to.be.calledThrice;
+    expect(updateProviderStub).to.be.calledTwice;
   });
 
   context("provider decoder", () => {

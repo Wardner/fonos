@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -16,48 +16,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {FonosService, ServiceOptions} from "@fonos/common";
+import {APIClient, ClientOptions} from "@fonoster/common";
 import {StorageClient} from "../service/protos/storage_grpc_pb";
 import StoragePB from "../service/protos/storage_pb";
 import CommonPB from "../service/protos/common_pb";
 import {
   GetObjectURLRequest,
   UploadObjectRequest,
-  getObjectURLResponse,
-  UploadObjectResponse
+  GetObjectURLResponse,
+  UploadObjectResponse,
+  IStorageClient
 } from "./types";
 import {promisifyAll} from "grpc-promise";
 import {getObjectServiceUtils, isDirectory, uploadServiceUtils} from "./utils";
 
 /**
- * @classdesc Use Fonos Storage, a capability of Fonos Object Storage subsystem,
+ * @classdesc Use Fonoster Storage, a capability of Fonoster Object Storage subsystem,
  * to upload, download, and delete objects.
  *
- * @extends FonosService
+ * @extends APIClient
  * @example
  *
- * const Fonos = require("@fonos/sdk")
- * const storage = new Fonos.Storage()
+ * const Fonoster = require("@fonoster/sdk")
+ * const storage = new Fonoster.Storage()
  *
  * storage.uploadObject()
  * .then(result => {
  *    console.log(result)            // successful response
  * }).catch(e => console.error(e))   // an error occurred
  */
-export default class Storage extends FonosService {
+export default class Storage extends APIClient implements IStorageClient {
   /**
    * Constructs a new Storage object.
-   * @param {ServiceOptions} options - Options to indicate the objects endpoint
-   * @see module:core:FonosService
+   * @param {ClientOptions} options - Options to indicate the objects endpoint
+   * @see module:core:APIClient
    */
-  constructor(options?: ServiceOptions) {
+  constructor(options?: ClientOptions) {
     super(StorageClient, options);
     super.init();
     promisifyAll(super.getService(), {metadata: super.getMeta()});
   }
 
   /**
-   * Upload an object to Fonos Object Storage subsystem.
+   * Upload an object toFonosterObject Storage subsystem.
    *
    * @param {UploadObjectRequest} request - Object with information about the origin and
    * destination of an object
@@ -117,7 +118,7 @@ export default class Storage extends FonosService {
    */
   async getObjectURL(
     request: GetObjectURLRequest
-  ): Promise<getObjectURLResponse> {
+  ): Promise<GetObjectURLResponse> {
     const result = await this.getService()
       .getObjectURL()
       .sendMessage(getObjectServiceUtils(request));
@@ -126,7 +127,7 @@ export default class Storage extends FonosService {
   }
 }
 
-export {StoragePB, CommonPB};
+export {StoragePB, CommonPB, IStorageClient};
 
 // WARNING: Workaround to support commonjs clients
 module.exports = Storage;

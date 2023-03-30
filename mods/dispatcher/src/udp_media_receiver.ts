@@ -1,8 +1,8 @@
 /*
  * Copyright (C) 2021 by Fonoster Inc (https://fonoster.com)
- * http://github.com/fonoster/fonos
+ * http://github.com/fonoster/fonoster
  *
- * This file is part of Project Fonos
+ * This file is part of Fonoster
  *
  * Licensed under the MIT License (the "License");
  * you may not use this file except in compliance with
@@ -18,7 +18,7 @@
  */
 import fs from "fs";
 import dgram from "dgram";
-import logger from "@fonos/logger";
+import logger from "@fonoster/logger";
 const pipe = require("stream").prototype.pipe;
 
 export default class UDPMediaReceiver {
@@ -28,7 +28,12 @@ export default class UDPMediaReceiver {
   address: string;
   port: number;
   fileStream: fs.WriteStream;
+  // Timeout to close the udp receiver. It feels hacky, but it works
+  timeToAutoClose: number = 120000;
   constructor(host: string, swap16?: boolean, alsoWritePath?: string) {
+    let timer = setTimeout(() => {
+      this.close();
+    }, this.timeToAutoClose);
     this.server = dgram.createSocket("udp4");
     // Add the Stream.pipe() method to the socket
     this.server.pipe = pipe;
@@ -45,7 +50,9 @@ export default class UDPMediaReceiver {
     }
 
     this.server.on("error", (err) => {
-      logger.error(`@fonos/dispatcher udpServer [server error:\n${err.stack}]`);
+      logger.error(
+        `@fonoster/dispatcher udpServer [server error:\n${err.stack}]`
+      );
       this.server.close();
       if (this.fileStream) {
         this.fileStream.close();
@@ -53,7 +60,7 @@ export default class UDPMediaReceiver {
     });
 
     this.server.on("close", (err) => {
-      logger.verbose(`@fonos/dispatcher udpServer [server socket closed]`);
+      logger.verbose(`@fonoster/dispatcher udpServer [server socket closed]`);
       if (this.fileStream) {
         this.fileStream.close();
       }
@@ -69,12 +76,18 @@ export default class UDPMediaReceiver {
         this.fileStream.write(buf);
       }
       this.server.emit("data", buf);
+
+      // WARNING: Hack to automatically close the port
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        this.close();
+      }, this.timeToAutoClose);
     });
 
     this.server.on("listening", () => {
       const address = this.server.address();
       logger.verbose(
-        `@fonos/dispatcher udpServer [address = ${address.address}:${address.port}]`
+        `@fonoster/dispatcher udpServer [address = ${address.address}:${address.port}]`
       );
     });
 
@@ -86,7 +99,9 @@ export default class UDPMediaReceiver {
   }
 
   close() {
-    logger.verbose(`@fonos/dispatcher udpServer [closing server]`);
-    this.server.close();
+    logger.verbose(`@fonoster/dispatcher udpServer [closing server socket]`);
+    try {
+      this.server.close();
+    } catch(e) { /** We can only try */}
   }
 }

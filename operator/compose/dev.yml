@@ -1,10 +1,18 @@
-# Warning: Including this file in your Fonos deployment will
+# Warning: Including this file in your Fonoster deployment will
 # open the ports to a number of private services. This is very
 # unsecured. Only recommended for development.
 
 version: '3.7'
 
 services:
+
+  logsdriver:
+    ports:
+      - ${LOGS_DRIVER_PORT}:${LOGS_DRIVER_PORT}
+      - ${LOGS_DRIVER_PORT}:${LOGS_DRIVER_PORT}/udp
+  logsaggregator:
+    ports:
+      - ${LOGS_AGGREGRATOR_PORT}:${LOGS_AGGREGRATOR_PORT}
 
   apiserver:
     ports:

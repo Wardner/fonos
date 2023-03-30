@@ -1,60 +1,62 @@
 /* eslint-disable require-jsdoc */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-import {FonosInvalidArgument} from "@fonos/errors";
-import {ResourceBuilder, Kind, routr} from "@fonos/core";
+import {FonosterInvalidArgument} from "@fonoster/errors";
+import {ResourceBuilder, Kind, routr, ResourceServer} from "@fonoster/core";
 import numberDecoder from "./decoder";
+import decoder from "./decoder";
 
 export default async function updateNumber(call: any, callback: any) {
-  const number = call.request.getNumber();
-
-  if (number.getAorLink() && number.getIngressInfo()) {
+  const request = call.request;
+  if (request.getAorLink() && request.getIngressInfo()) {
     callback(
-      new FonosInvalidArgument(
+      new FonosterInvalidArgument(
         "'ingressInfo' and 'aorLink' are not compatible parameters"
       )
     );
     return;
-  } else if (!number.getAorLink() && !number.getIngressInfo()) {
+  } else if (!request.getAorLink() && !request.getIngressInfo()) {
     callback(
-      new FonosInvalidArgument(
+      new FonosterInvalidArgument(
         "You must provider either an 'ingressInfo' or and 'aorLink'"
       )
     );
     return;
   }
 
+  const objectFromDB = decoder(
+    await ResourceServer.getResource(Kind.NUMBER, call)
+  );
   let encoder = new ResourceBuilder(
     Kind.NUMBER,
-    number.getE164Number(),
-    number.getRef()
+    objectFromDB.getE164Number(),
+    objectFromDB.getRef()
   );
 
-  if (number.getAorLink()) {
+  if (request.getAorLink()) {
     encoder = encoder
-      .withLocation(`tel:${number.getE164Number()}`, number.getAorLink())
+      .withLocation(`tel:${objectFromDB.getE164Number()}`, request.getAorLink())
       .withMetadata({
-        gwRef: number.getProviderRef(),
-        createdOn: number.getCreateTime(),
-        modifiedOn: number.getUpdateTime()
+        gwRef: request.getProviderRef(),
+        createdOn: objectFromDB.getCreateTime()
       });
   } else {
     encoder = encoder
-      .withLocation(`tel:${number.getE164Number()}`, process.env.MS_ENDPOINT)
+      .withLocation(
+        `tel:${objectFromDB.getE164Number()}`,
+        process.env.MS_ENDPOINT
+      )
       .withMetadata({
-        webhook: number.getIngressInfo()
-          ? number.getIngressInfo().getWebhook()
+        webhook: request.getIngressInfo()
+          ? request.getIngressInfo().getWebhook().trim()
           : undefined,
-        gwRef: number.getProviderRef(),
-        createdOn: number.getCreateTime(),
-        modifiedOn: number.getUpdateTime()
+        gwRef: objectFromDB.getProviderRef(),
+        createdOn: objectFromDB.getCreateTime()
       });
   }
 
-  const resource = encoder.build();
-
   try {
     await routr.connect();
-    const ref = await routr.resourceType("numbers").update(resource);
+    const ref = await routr.resourceType("numbers").update(encoder.build());
 
     // We do this to get updated metadata from Routr
     const jsonObj = await routr.resourceType("numbers").get(ref);

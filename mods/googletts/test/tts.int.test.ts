@@ -8,7 +8,7 @@ import {join} from "path";
 //import fs from 'fs'
 //import path from 'path'
 //import textToSpeech from '@google-cloud/text-to-speech'
-const {transcode} = require("@fonos/tts");
+const {transcode} = require("@fonoster/tts");
 
 const expect = chai.expect;
 chai.use(sinonChai);
@@ -19,7 +19,7 @@ if (process.env.NODE_ENV === "dev") {
   require("dotenv").config({path: join(__dirname, "..", "..", ".env")});
 }
 
-describe("@fonos/googletts", () => {
+describe("@fonoster/googletts", () => {
   afterEach(() => sandbox.restore());
 
   /*it('rejects if the TTS because could not find default credentials', () => {
@@ -38,19 +38,21 @@ describe("@fonos/googletts", () => {
     expect(synthesizeSpeech).to.not.have.been.called
   })*/
 
-  it("synthesizes text and returns path to file", async () => {
+  it("synthesizes text or ssml and returns path to the new file", async () => {
     const config = {
       projectId: "clever-tube-275321",
-      keyFilename: "/Users/pedrosanders/Projects/fonos/credentials.json"
+      keyFilename: "/Users/pedrosanders/Projects/fonoster/credentials.json"
     };
 
     const tts = new GoogleTTS(config);
-    await tts.synthetize("Hello Kayla, how are you doing today?", {
-      ssmlGender: "FEMALE"
-    });
-    transcode(
-      "/tmp/793891cb5510c196c4f487ad00c430fd.mp3",
-      "/tmp/t_793891cb5510c196c4f487ad00c430fd.wav"
+    const result = await tts.synthesize(
+      '<speak data-ui-hide-intent="true"> <par> <media xml:id=\'a\'> <speak><break time="2s" />Hello, thanks for calling! How can I help you? </speak> </media> <media xml:id=\'bg-loop\' end="speak.begin"> <audio soundLevel="-5dB" src="https://storage.googleapis.com/gablex-tts/persona/house/bg-loop-minimal.mp3"/> </media> <media xml:id="speak" begin="a.end-500ms"><audio soundLevel="+10dB" src="https://storage.googleapis.com/gablex-tts/persona/house/slang_notification_speak_now_08.wav"/></media> </par> </speak>',
+      {
+        ssmlGender: "FEMALE"
+      }
     );
+
+    expect(result).to.have.property("filename");
+    expect(result).to.have.property("pathToFile");
   });
 });
